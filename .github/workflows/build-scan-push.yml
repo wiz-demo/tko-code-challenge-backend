@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dockerfile: [alpine, wizos]
+        dockerfile: [debian, wizos]
 
     steps:
       - name: Checkout
