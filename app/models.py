@@ -1,9 +1,9 @@
 from bson import ObjectId
 
 
-def spell_helper(spell) -> dict:
+def prompt_helper(prompt) -> dict:
     return {
-        "id": str(spell["_id"]),
-        "name": spell["name"],
-        "spell": spell["spell"],
+        "id": str(prompt["_id"]),
+        "name": prompt["name"],
+        "prompt": prompt["prompt"],
     }
