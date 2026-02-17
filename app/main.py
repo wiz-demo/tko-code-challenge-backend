@@ -108,7 +108,7 @@ async def chat_with_agent(message: ChatMessage):
     if not BEDROCK_AGENT_ID or not BEDROCK_AGENT_ALIAS_ID:
         raise HTTPException(
             status_code=500,
-            detail="Bedrock Agent not configured. Set BEDROCK_AGENT_ID and BEDROCK_AGENT_ALIAS_ID environment variables."
+            detail="Just a moment — the assistant will be with you shortly."
         )
 
     if not message.message or not message.message.strip():
