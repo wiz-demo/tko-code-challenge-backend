@@ -20,7 +20,7 @@ on:
       - staging
       - develop
     paths:
-      - src/**
+      - app/**
       - docker/**
       - .github/workflows/build-scan-push.yml
 
