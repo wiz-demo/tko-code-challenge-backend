@@ -39,6 +39,13 @@ bedrock_client = boto3.client(
 )
 
 
+@app.get("/")
+async def root(got_root: str | None = None):
+    if got_root == "WelcomeToWizExposureTKO27":
+        return "WizCongrats!"
+    raise HTTPException(status_code=404)
+
+
 @app.post("/api/prompts")
 async def save_prompt(prompt: Prompt):
     prompt_doc = prompt.dict()
