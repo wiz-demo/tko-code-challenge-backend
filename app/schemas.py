@@ -1,9 +1,14 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
-class Spell(BaseModel):
+class Prompt(BaseModel):
     name: str
-    spell: str
+    prompt: str
 
-class YAMLSpellbook(BaseModel):
+class YAMLPrompts(BaseModel):
     yaml_content: str
+
+class ChatMessage(BaseModel):
+    message: str
+    sessionId: Optional[str] = None
