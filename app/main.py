@@ -7,7 +7,7 @@ from uuid import uuid4
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from schemas import Prompt, YAMLPrompts, ChatMessage
-from database import db
+from database import db, sqlite_db
 from models import prompt_helper
 import boto3
 from botocore.exceptions import ClientError
@@ -55,6 +55,17 @@ async def get_all_prompts():
     async for prompt in db.prompts.find():
         prompts.append(prompt_helper(prompt))
     return prompts
+
+
+@app.get("/api/users")
+async def get_users(username: str | None = None):
+    # Vulnerable to SQL injection (CWE-89) — intentional for demo
+    query = f"SELECT id, username, email, role FROM users WHERE username = '{username}'"
+    rows = sqlite_db.execute(query).fetchall()
+    return [
+        {"id": r[0], "username": r[1], "email": r[2], "role": r[3]}
+        for r in rows
+    ]
 
 
 @app.get("/api/execute")
