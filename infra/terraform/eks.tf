@@ -5,83 +5,78 @@ resource "aws_iam_role" "cluster" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "eks.amazonaws.com"
-      }
-      Action = ["sts:AssumeRole", "sts:TagSession"]
+      Effect    = "Allow"
+      Principal = { Service = "eks.amazonaws.com" }
+      Action    = "sts:AssumeRole"
     }]
   })
 }
 
-# Auto Mode requires this exact set of managed policies on the cluster role
+# Classic managed-node-group cluster role policies
 resource "aws_iam_role_policy_attachment" "cluster" {
   for_each = toset([
     "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
-    "arn:aws:iam::aws:policy/AmazonEKSComputePolicy",
-    "arn:aws:iam::aws:policy/AmazonEKSBlockStoragePolicy",
-    "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy",
-    "arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy",
+    "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController",
   ])
 
   policy_arn = each.value
   role       = aws_iam_role.cluster.name
 }
 
-# ----- Node IAM role (used by Auto Mode-managed nodes) -----
+# ----- Node IAM role -----
 resource "aws_iam_role" "node" {
   name = "${var.cluster_name}-node-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "ec2.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
     }]
   })
 }
 
-# Minimal policy set — pull-only ECR + the worker minimum. NO additional
-# AWS API access, so an RCE inside the pod can't trivially pivot to AWS.
+# Classic managed-node-group node role policies
 resource "aws_iam_role_policy_attachment" "node" {
   for_each = toset([
-    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy",
-    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
+    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
   ])
 
   policy_arn = each.value
   role       = aws_iam_role.node.name
 }
 
-# ----- EKS cluster (Auto Mode) -----
+# ----- EKS cluster (classic, with managed node group below) -----
+# Auto Mode was incompatible with this account's SCP: the SCP restricts
+# RunInstances to t2/t3/t4g/c5/m5 large/xlarge, but the AWS-managed
+# `general-purpose` NodePool picks newer-generation c/m/r instances which
+# all get denied. We use a classic managed node group that lets us pin
+# instance_types ourselves.
 resource "aws_eks_cluster" "this" {
-  name                          = var.cluster_name
-  version                       = var.kubernetes_version
-  role_arn                      = aws_iam_role.cluster.arn
-  bootstrap_self_managed_addons = false
+  name     = var.cluster_name
+  version  = var.kubernetes_version
+  role_arn = aws_iam_role.cluster.arn
 
   access_config {
     authentication_mode = "API"
   }
 
+  # Explicit `false` to switch off the Auto Mode flags previously set to true.
+  # The provider requires all three to be set together.
   compute_config {
-    enabled       = true
-    node_pools    = ["general-purpose"]
-    node_role_arn = aws_iam_role.node.arn
+    enabled = false
   }
-
   kubernetes_network_config {
     elastic_load_balancing {
-      enabled = true
+      enabled = false
     }
   }
-
   storage_config {
     block_storage {
-      enabled = true
+      enabled = false
     }
   }
 
@@ -91,10 +86,25 @@ resource "aws_eks_cluster" "this" {
     endpoint_private_access = true
   }
 
-  depends_on = [
-    aws_iam_role_policy_attachment.cluster,
-    aws_iam_role_policy_attachment.node,
-  ]
+  depends_on = [aws_iam_role_policy_attachment.cluster]
+}
+
+# ----- Managed node group with SCP-allowed instance types -----
+resource "aws_eks_node_group" "general" {
+  cluster_name    = aws_eks_cluster.this.name
+  node_group_name = "general"
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.private[*].id
+  instance_types  = ["t3.large"]
+  disk_size       = 20
+
+  scaling_config {
+    desired_size = 1
+    min_size     = 1
+    max_size     = 2
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.node]
 }
 
 # ----- Cluster-admin access entry for the operator -----
