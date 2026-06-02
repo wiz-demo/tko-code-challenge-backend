@@ -101,22 +101,29 @@ resource "aws_eks_cluster" "this" {
 # data.aws_caller_identity.current.arn for SSO sessions returns an
 # assumed-role ARN like:
 #   arn:aws:sts::<acct>:assumed-role/<RoleName>/<session>
-# EKS access entries need the role ARN, which for SSO is:
-#   arn:aws:iam::<acct>:role/aws-reserved/sso.amazonaws.com/<RoleName>
-# This locals block converts when running under SSO and falls back to the
-# raw caller ARN otherwise (regular IAM user / role).
+# EKS access entries need the underlying IAM role ARN. For SSO the path
+# includes a region segment (e.g. /aws-reserved/sso.amazonaws.com/us-east-2/)
+# that can't be derived from the caller ARN, so we look it up via
+# data.aws_iam_roles. For regular assumed roles we construct the ARN
+# directly. For IAM users we use the caller ARN unchanged.
 locals {
   _caller_arn        = data.aws_caller_identity.current.arn
   _is_assumed_role   = startswith(local._caller_arn, "arn:aws:sts::")
   _assumed_role_name = local._is_assumed_role ? split("/", local._caller_arn)[1] : ""
   _is_sso            = local._is_assumed_role && startswith(local._assumed_role_name, "AWSReservedSSO_")
+}
 
-  admin_principal_arn = local._is_assumed_role ? (
-    local._is_sso ? (
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/${local._assumed_role_name}"
-      ) : (
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local._assumed_role_name}"
-    )
+data "aws_iam_roles" "sso_admin" {
+  count       = local._is_sso ? 1 : 0
+  path_prefix = "/aws-reserved/sso.amazonaws.com/"
+  name_regex  = "^${local._assumed_role_name}$"
+}
+
+locals {
+  admin_principal_arn = local._is_sso ? (
+    one(tolist(data.aws_iam_roles.sso_admin[0].arns))
+    ) : local._is_assumed_role ? (
+    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local._assumed_role_name}"
   ) : local._caller_arn
 }
 
