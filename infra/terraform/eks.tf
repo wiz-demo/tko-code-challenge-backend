@@ -111,8 +111,12 @@ locals {
   _assumed_role_name = local._is_assumed_role ? split("/", local._caller_arn)[1] : ""
   _is_sso            = local._is_assumed_role && startswith(local._assumed_role_name, "AWSReservedSSO_")
 
-  admin_principal_arn = local._is_sso ? (
-    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/${local._assumed_role_name}"
+  admin_principal_arn = local._is_assumed_role ? (
+    local._is_sso ? (
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/${local._assumed_role_name}"
+      ) : (
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local._assumed_role_name}"
+    )
   ) : local._caller_arn
 }
 
