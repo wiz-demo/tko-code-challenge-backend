@@ -53,6 +53,18 @@ resource "wiz-v2_generic_connector" "aws_sorcery" {
   # values are stored as opaque strings by the API; actual AWS-resource
   # validation is deferred to scan time.
   extra_config = jsonencode({
+    # Scope to a single AWS account (800618367342, where the IAM role lives).
+    # skipOrganizationScan = true tells Wiz NOT to enumerate the AWS Org from
+    # this connector, so sibling accounts in org o-4ynr318qmi are never
+    # touched. The role only exists in account 800618367342, so single-account
+    # mode == "scan only 800618367342".
+    #
+    # `includedAccounts` / `excludedAccounts` are intentionally NOT set — they
+    # are org-scan-only fields (require skipOrganizationScan = false). See
+    # /Users/itay.katz/terraform-test/docs/superpowers/specs/2026-05-05-aws-
+    # connector-extra-config-coverage-design.md ("Out of scope" section).
+    skipOrganizationScan = true
+
     securityToolScanningSettings = {
       bucketConfig            = { forceScanMethod = "SAAS" }
       containerImageConfig    = { forceScanMethod = "SAAS" }
