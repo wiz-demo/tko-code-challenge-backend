@@ -5,7 +5,7 @@ data "external" "git_sha" {
 
 # Hash of every file under app/ so app changes trigger a rebuild
 locals {
-  _app_files = fileset("${path.module}/../../app", "**")
+  _app_files = [for f in fileset("${path.module}/../../app", "**") : f if !can(regex("__pycache__", f)) && !endswith(f, ".pyc")]
   app_sha = sha256(join(",", [
     for f in local._app_files :
     filesha256("${path.module}/../../app/${f}")

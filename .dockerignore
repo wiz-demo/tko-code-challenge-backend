@@ -1,0 +1,29 @@
+# Source control
+.git/
+.gitignore
+
+# Terraform IaC (provider cache is huge — never needed in image)
+infra/
+
+# Docs and helm chart (not part of the runtime image)
+docs/
+helm/
+*.md
+LICENSE
+CODEOWNERS
+
+# IDE / OS noise
+.idea/
+.vscode/
+.DS_Store
+
+# Python local artefacts (mirror what we already filter from triggers)
+**/__pycache__/
+*.pyc
+*.pyo
+.python-version
+.pytest_cache/
+
+# Local secrets / env
+.env
+.env.*
