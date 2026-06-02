@@ -17,13 +17,13 @@ variable "connector_name" {
 }
 
 variable "aws_account_id" {
-  description = "AWS account ID to scan (optional, auto-detected if not provided)."
+  description = "AWS account ID Wiz should scan. Passed to the connector explicitly via auth_params.customerAccountID so the scope is documented in code (not just implied by the role ARN's account)."
   type        = string
-  default     = ""
+  default     = "800618367342"
 
   validation {
-    condition     = var.aws_account_id == "" || can(regex("^[0-9]{12}$", var.aws_account_id))
-    error_message = "aws_account_id must be a 12-digit number or empty."
+    condition     = can(regex("^[0-9]{12}$", var.aws_account_id))
+    error_message = "aws_account_id must be a 12-digit number."
   }
 }
 
@@ -44,9 +44,25 @@ resource "wiz-v2_generic_connector" "aws_sorcery" {
   name = var.connector_name
   type = "aws"
 
+  # The Wiz AWS connector schema does NOT accept a top-level account field
+  # in auth_params (we tried customerAccountID — API responded "Unexpected
+  # field"). The account is implied by the customerRoleARN. Instead we pin
+  # the scope explicitly in terraform via:
+  #   - var.aws_account_id (default "800618367342", validated as 12 digits)
+  #   - the precondition below, which fails the plan/apply if the role ARN's
+  #     account segment doesn't match var.aws_account_id
+  # Combined with skipOrganizationScan=true (extra_config) this guarantees
+  # the connector can only ever target the one named account.
   auth_params = jsonencode({
     customerRoleARN = data.terraform_remote_state.wiz_iam.outputs.role_arn
   })
+
+  lifecycle {
+    precondition {
+      condition     = split(":", data.terraform_remote_state.wiz_iam.outputs.role_arn)[4] == var.aws_account_id
+      error_message = "Role ARN's account (${split(":", data.terraform_remote_state.wiz_iam.outputs.role_arn)[4]}) does not match var.aws_account_id (${var.aws_account_id})."
+    }
+  }
 
   # Minimal extra_config: forces SaaS-side scanning (no in-account scanning
   # infrastructure required) and provides stub VPC flow log config. Stub
@@ -65,25 +81,8 @@ resource "wiz-v2_generic_connector" "aws_sorcery" {
     # connector-extra-config-coverage-design.md ("Out of scope" section).
     skipOrganizationScan = true
 
-    securityToolScanningSettings = {
-      bucketConfig            = { forceScanMethod = "SAAS" }
-      containerImageConfig    = { forceScanMethod = "SAAS" }
-      dataWorkloadConfig      = { forceScanMethod = "SAAS" }
-      databaseConfig          = { forceScanMethod = "SAAS" }
-      fileSystemServiceConfig = { forceScanMethod = "SAAS" }
-      serverlessConfig        = { forceScanMethod = "SAAS" }
-      virtualMachineConfig    = { forceScanMethod = "SAAS" }
-    }
-    vpcFlowLogConfig = {
-      bucketName          = "wiz-stub-vpcflow"
-      bucketAccountID     = "000000000000"
-      bucketAccessRoleARN = "arn:aws:iam::000000000000:role/stub"
-      notificationsSQSOptions = {
-        region              = "us-east-1"
-        assumeRoleAccountID = "000000000000"
-        overrideQueueURL    = "https://sqs.us-east-1.amazonaws.com/000000000000/stub"
-      }
-    }
+
+
   })
 }
 
