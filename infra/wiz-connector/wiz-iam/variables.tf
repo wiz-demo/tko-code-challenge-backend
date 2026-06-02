@@ -40,13 +40,13 @@ variable "wiz_client_secret" {
 variable "wiz_role_name" {
   description = "Name of the IAM role to create for Wiz to assume."
   type        = string
-  default     = "WizAccess-Role-SorcerySolutions"
+  default     = "WizAccess-Role-CodeChallange"
 }
 
 variable "iam_policy_suffix" {
   description = "Suffix appended to Wiz custom IAM policy names to disambiguate from other Wiz deployments in the same account."
   type        = string
-  default     = "-sorcery"
+  default     = "-codechallange"
 }
 
 variable "wiz_remote_arn" {

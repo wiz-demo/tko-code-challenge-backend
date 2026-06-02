@@ -38,7 +38,7 @@ make apply   # IAM first, then connector
 ```
 
 After apply, check the Wiz UI under Settings → Connectors → the connector
-`TF-AWS-Connector-SorcerySolutions` should appear and start its first scan
+`TF-AWS-Connector-CodeChallange` should appear and start its first scan
 within a few minutes.
 
 ## Tear down

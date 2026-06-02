@@ -13,7 +13,7 @@
 variable "connector_name" {
   description = "Display name for the Wiz connector shown in the Wiz UI."
   type        = string
-  default     = "TF-AWS-Connector-SorcerySolutions"
+  default     = "TF-AWS-Connector-CodeChallange"
 }
 
 variable "aws_account_id" {
