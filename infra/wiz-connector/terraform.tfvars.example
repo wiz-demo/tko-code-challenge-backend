@@ -1,0 +1,35 @@
+# =============================================================================
+# Wiz AWS Connector — local config
+# =============================================================================
+#
+# Copy this file to `terraform.tfvars` and fill in the Wiz secrets.
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# `terraform.tfvars` is gitignored — secrets stay local.
+# =============================================================================
+
+# ----- Wiz service-account credentials -----
+# Generate at: Wiz Console > Settings > Service Accounts > Create Service Account
+#   Required scopes: at minimum, create:connectors and read:tenant
+wiz_client_id     = "REPLACE_WITH_YOUR_WIZ_CLIENT_ID"
+wiz_client_secret = "REPLACE_WITH_YOUR_WIZ_CLIENT_SECRET"
+
+# Wiz environment: typically `test` for the test data center, `prod` for production
+wiz_env = "test"
+
+# ----- AWS target (where the IAM role + connector are deployed) -----
+aws_region  = "us-east-1"
+aws_profile = "dev-product-cto-play"   # account 800618367342
+owner       = "itay.katz"
+
+# ----- Connector display name (shown in Wiz UI) -----
+connector_name = "TF-AWS-Connector-SorcerySolutions"
+
+# ----- Wiz IAM role customization (used by the wiz-iam sub-project) -----
+# Defaults are sensible; uncomment to override:
+# wiz_role_name     = "WizAccess-Role-SorcerySolutions"
+# iam_policy_suffix = "-sorcery"
+
+# wiz_remote_arn: provided by Wiz; the data-center role allowed to assume
+# the customer IAM role. Default matches the terraform-test reference.
+# wiz_remote_arn = "arn:aws:iam::229870817538:role/test-eu3-AssumeRoleDelegator"

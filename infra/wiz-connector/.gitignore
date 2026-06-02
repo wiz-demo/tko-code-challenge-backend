@@ -1,0 +1,22 @@
+# Terraform state and lock files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+crash.log
+crash.*.log
+
+# Terraform provider plugins and modules
+.terraform/
+.terraform.lock.hcl
+
+# Plan files
+*.tfplan
+
+# Local tfvars (contain Wiz secrets) — never commit
+# The .example version IS committed as a reference.
+terraform.tfvars
+sandbox.tfvars
+*.auto.tfvars
+
+# Wiz / app private keys
+*.pem
