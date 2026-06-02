@@ -47,10 +47,14 @@ resource "helm_release" "backend" {
         type = "LoadBalancer"
         port = 8000
       }
-      env = {
-        MONGO_URI = "mongodb://placeholder:27017"
-        MONGO_DB  = "sorcery_demo"
-      }
+      # Chart's deployment.yaml does `toYaml .Values.env` and Kubernetes
+      # Container.env requires a list of {name, value} pairs (not a map),
+      # so pass env as a list here. The chart's default values.yaml has
+      # the same map shape and is broken — only the override saves us.
+      env = [
+        { name = "MONGO_URI", value = "mongodb://placeholder:27017" },
+        { name = "MONGO_DB", value = "sorcery_demo" },
+      ]
       resources = {
         requests = {
           cpu    = "250m"
