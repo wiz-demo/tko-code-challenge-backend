@@ -75,7 +75,7 @@ and installs the existing Helm chart.
 New directory at repo root:
 
 ```
-infra/terraform/
+infra/aws/
 ├── main.tf        # AWS provider + default_tags
 ├── versions.tf    # required_providers, version pins
 ├── variables.tf   # owner, region (with defaults)
@@ -218,10 +218,10 @@ Convenience wrappers:
 
 | target | does |
 |---|---|
-| `make init` | `terraform -chdir=infra/terraform init` |
-| `make plan` | `terraform -chdir=infra/terraform plan` |
-| `make apply` | `terraform -chdir=infra/terraform apply` (interactive confirm) |
-| `make destroy` | `terraform -chdir=infra/terraform destroy` |
+| `make init` | `terraform -chdir=infra/aws init` |
+| `make plan` | `terraform -chdir=infra/aws plan` |
+| `make apply` | `terraform -chdir=infra/aws apply` (interactive confirm) |
+| `make destroy` | `terraform -chdir=infra/aws destroy` |
 | `make kubeconfig` | runs the `kubeconfig_command` output |
 | `make smoke` | runs the curls against `service_hostname` |
 

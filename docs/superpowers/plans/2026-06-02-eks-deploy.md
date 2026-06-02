@@ -4,7 +4,7 @@
 
 **Goal:** Deploy the FastAPI demo backend (with intentional CWE-78/89/502 vulnerabilities) to a fresh EKS Auto Mode cluster in AWS account `800618367342` (`cto-experts` SSO profile, `us-east-1`) via Terraform, exposed via a public NLB.
 
-**Architecture:** Single Terraform module at `infra/terraform/` with local state. One VPC, one EKS Auto Mode cluster, one ECR repo, one `null_resource`-style image build (`terraform_data`), one helm_release of the existing `helm/sorcery-solutions-backend` chart. Public exposure via Service type=LoadBalancer (NLB). No HTTPS, no backing services for Mongo/Bedrock.
+**Architecture:** Single Terraform module at `infra/aws/` with local state. One VPC, one EKS Auto Mode cluster, one ECR repo, one `null_resource`-style image build (`terraform_data`), one helm_release of the existing `helm/sorcery-solutions-backend` chart. Public exposure via Service type=LoadBalancer (NLB). No HTTPS, no backing services for Mongo/Bedrock.
 
 **Tech Stack:** Terraform `>= 1.6`, `hashicorp/aws ~> 5.70`, `hashicorp/helm ~> 2.15`, `hashicorp/kubernetes ~> 2.32`, `hashicorp/external ~> 2.3`, `hashicorp/null ~> 3.2`. Docker + buildx locally for image builds. AWS CLI v2 for SSO.
 
@@ -86,21 +86,21 @@ to /openapi.json which FastAPI always serves with HTTP 200."
 
 ## Task 2: Terraform module scaffolding
 
-Bootstrap `infra/terraform/` with provider config, required-providers pins, variables, default_tags, and a `.gitignore` so state and provider plugins don't get committed.
+Bootstrap `infra/aws/` with provider config, required-providers pins, variables, default_tags, and a `.gitignore` so state and provider plugins don't get committed.
 
 **Files:**
-- Create: `infra/terraform/.gitignore`
-- Create: `infra/terraform/versions.tf`
-- Create: `infra/terraform/main.tf`
-- Create: `infra/terraform/variables.tf`
+- Create: `infra/aws/.gitignore`
+- Create: `infra/aws/versions.tf`
+- Create: `infra/aws/main.tf`
+- Create: `infra/aws/variables.tf`
 
 - [ ] **Step 1: Create the directory**
 
 ```bash
-mkdir -p infra/terraform
+mkdir -p infra/aws
 ```
 
-- [ ] **Step 2: Create `infra/terraform/.gitignore`**
+- [ ] **Step 2: Create `infra/aws/.gitignore`**
 
 ```gitignore
 # Terraform state and lock files
@@ -118,7 +118,7 @@ crash.*.log
 *.tfplan
 ```
 
-- [ ] **Step 3: Create `infra/terraform/versions.tf`**
+- [ ] **Step 3: Create `infra/aws/versions.tf`**
 
 ```hcl
 terraform {
@@ -149,7 +149,7 @@ terraform {
 }
 ```
 
-- [ ] **Step 4: Create `infra/terraform/variables.tf`**
+- [ ] **Step 4: Create `infra/aws/variables.tf`**
 
 ```hcl
 variable "region" {
@@ -199,7 +199,7 @@ variable "vpc_cidr" {
 }
 ```
 
-- [ ] **Step 5: Create `infra/terraform/main.tf`**
+- [ ] **Step 5: Create `infra/aws/main.tf`**
 
 ```hcl
 provider "aws" {
@@ -232,9 +232,9 @@ locals {
 - [ ] **Step 6: Initialise and validate**
 
 ```bash
-terraform -chdir=infra/terraform init -input=false
-terraform -chdir=infra/terraform fmt
-terraform -chdir=infra/terraform validate
+terraform -chdir=infra/aws init -input=false
+terraform -chdir=infra/aws fmt
+terraform -chdir=infra/aws validate
 ```
 
 Expected: `init` downloads all 5 providers, `fmt` reports no changes (or reformats — that's fine, just re-stage), `validate` prints `Success! The configuration is valid.`
@@ -242,7 +242,7 @@ Expected: `init` downloads all 5 providers, `fmt` reports no changes (or reforma
 - [ ] **Step 7: Commit**
 
 ```bash
-git add infra/terraform/.gitignore infra/terraform/versions.tf infra/terraform/main.tf infra/terraform/variables.tf
+git add infra/aws/.gitignore infra/aws/versions.tf infra/aws/main.tf infra/aws/variables.tf
 git commit -m "feat(infra): scaffold Terraform module for EKS deploy
 
 Adds provider pins, AWS provider config with default_tags
@@ -257,9 +257,9 @@ state files. terraform init/validate succeed."
 Self-contained networking. EKS Auto Mode needs both public subnets (tagged `kubernetes.io/role/elb=1` so the LB controller will place internet-facing LBs there) and private subnets (tagged `internal-elb` for pods).
 
 **Files:**
-- Create: `infra/terraform/vpc.tf`
+- Create: `infra/aws/vpc.tf`
 
-- [ ] **Step 1: Create `infra/terraform/vpc.tf`**
+- [ ] **Step 1: Create `infra/aws/vpc.tf`**
 
 ```hcl
 resource "aws_vpc" "this" {
@@ -372,8 +372,8 @@ resource "aws_route_table_association" "private" {
 - [ ] **Step 2: Format and validate**
 
 ```bash
-terraform -chdir=infra/terraform fmt
-terraform -chdir=infra/terraform validate
+terraform -chdir=infra/aws fmt
+terraform -chdir=infra/aws validate
 ```
 
 Expected: `Success! The configuration is valid.`
@@ -381,7 +381,7 @@ Expected: `Success! The configuration is valid.`
 - [ ] **Step 3: Commit**
 
 ```bash
-git add infra/terraform/vpc.tf
+git add infra/aws/vpc.tf
 git commit -m "feat(infra): add VPC with 2 public + 2 private subnets
 
 Single VPC at 10.42.0.0/16 spanning 2 AZs. Public subnets tagged
@@ -394,9 +394,9 @@ placement). Single NAT gateway in public AZ-a (cost-saving)."
 ## Task 4: ECR repository for the backend image
 
 **Files:**
-- Create: `infra/terraform/ecr.tf`
+- Create: `infra/aws/ecr.tf`
 
-- [ ] **Step 1: Create `infra/terraform/ecr.tf`**
+- [ ] **Step 1: Create `infra/aws/ecr.tf`**
 
 ```hcl
 resource "aws_ecr_repository" "backend" {
@@ -438,8 +438,8 @@ resource "aws_ecr_lifecycle_policy" "backend" {
 - [ ] **Step 2: Format and validate**
 
 ```bash
-terraform -chdir=infra/terraform fmt
-terraform -chdir=infra/terraform validate
+terraform -chdir=infra/aws fmt
+terraform -chdir=infra/aws validate
 ```
 
 Expected: `Success! The configuration is valid.`
@@ -447,7 +447,7 @@ Expected: `Success! The configuration is valid.`
 - [ ] **Step 3: Commit**
 
 ```bash
-git add infra/terraform/ecr.tf
+git add infra/aws/ecr.tf
 git commit -m "feat(infra): add ECR repo for backend image
 
 Mutable tags (so re-builds at the same git SHA work during
@@ -463,9 +463,9 @@ doesn't error on residual images, lifecycle policy retains
 The biggest single file in the module. Defines the cluster IAM role, the node IAM role (used by Auto Mode), the cluster itself with `compute_config` / `kubernetes_network_config` / `storage_config`, and an access entry that grants cluster admin to whoever ran `terraform apply` (resolved from `data.aws_caller_identity` with SSO-assumed-role normalisation).
 
 **Files:**
-- Create: `infra/terraform/eks.tf`
+- Create: `infra/aws/eks.tf`
 
-- [ ] **Step 1: Create `infra/terraform/eks.tf`**
+- [ ] **Step 1: Create `infra/aws/eks.tf`**
 
 ```hcl
 # ----- Cluster IAM role -----
@@ -608,8 +608,8 @@ resource "aws_eks_access_policy_association" "admin" {
 - [ ] **Step 2: Format and validate**
 
 ```bash
-terraform -chdir=infra/terraform fmt
-terraform -chdir=infra/terraform validate
+terraform -chdir=infra/aws fmt
+terraform -chdir=infra/aws validate
 ```
 
 Expected: `Success! The configuration is valid.`
@@ -617,7 +617,7 @@ Expected: `Success! The configuration is valid.`
 - [ ] **Step 3: Commit**
 
 ```bash
-git add infra/terraform/eks.tf
+git add infra/aws/eks.tf
 git commit -m "feat(infra): add EKS Auto Mode cluster + IAM + access entry
 
 Cluster IAM role with the Auto Mode managed-policy set. Node IAM
@@ -634,9 +634,9 @@ from SSO assumed-role ARN) gets cluster-admin access entry."
 A `terraform_data` resource whose `triggers_replace` map includes the git SHA and the Dockerfile hash. When either changes, the `local-exec` re-runs `docker buildx build --push`. Uses `data "external"` to read the git SHA at plan time.
 
 **Files:**
-- Create: `infra/terraform/image.tf`
+- Create: `infra/aws/image.tf`
 
-- [ ] **Step 1: Create `infra/terraform/image.tf`**
+- [ ] **Step 1: Create `infra/aws/image.tf`**
 
 ```hcl
 # Read git SHA at plan time so it lands in the image tag
@@ -689,8 +689,8 @@ resource "terraform_data" "image_build" {
 - [ ] **Step 2: Format and validate**
 
 ```bash
-terraform -chdir=infra/terraform fmt
-terraform -chdir=infra/terraform validate
+terraform -chdir=infra/aws fmt
+terraform -chdir=infra/aws validate
 ```
 
 Expected: `Success! The configuration is valid.` (validate doesn't run the local-exec; it just checks syntax.)
@@ -698,7 +698,7 @@ Expected: `Success! The configuration is valid.` (validate doesn't run the local
 - [ ] **Step 3: Commit**
 
 ```bash
-git add infra/terraform/image.tf
+git add infra/aws/image.tf
 git commit -m "feat(infra): build and push backend image to ECR via local-exec
 
 terraform_data resource with triggers_replace on git SHA, the
@@ -715,9 +715,9 @@ because ECR rejects OCI provenance attestations."
 Configures the helm and kubernetes providers using `data.aws_eks_cluster_auth`, deploys the existing `helm/sorcery-solutions-backend` chart with overrides for image, service type, env vars, and resources. The probe paths come from the chart defaults (fixed in Task 1).
 
 **Files:**
-- Create: `infra/terraform/k8s.tf`
+- Create: `infra/aws/k8s.tf`
 
-- [ ] **Step 1: Create `infra/terraform/k8s.tf`**
+- [ ] **Step 1: Create `infra/aws/k8s.tf`**
 
 ```hcl
 data "aws_eks_cluster_auth" "this" {
@@ -792,8 +792,8 @@ data "kubernetes_service" "backend" {
 - [ ] **Step 2: Format and validate**
 
 ```bash
-terraform -chdir=infra/terraform fmt
-terraform -chdir=infra/terraform validate
+terraform -chdir=infra/aws fmt
+terraform -chdir=infra/aws validate
 ```
 
 Expected: `Success! The configuration is valid.`
@@ -801,7 +801,7 @@ Expected: `Success! The configuration is valid.`
 - [ ] **Step 3: Commit**
 
 ```bash
-git add infra/terraform/k8s.tf
+git add infra/aws/k8s.tf
 git commit -m "feat(infra): helm_release of sorcery-solutions-backend chart
 
 Helm and kubernetes providers wired to the EKS cluster via
@@ -819,10 +819,10 @@ blocks apply until the pod is healthy."
 Operator-facing surface: kubeconfig command, ECR URL, NLB hostname (or graceful empty if not yet provisioned), pre-baked smoke-test commands. Makefile shortcuts.
 
 **Files:**
-- Create: `infra/terraform/outputs.tf`
-- Create: `infra/terraform/Makefile`
+- Create: `infra/aws/outputs.tf`
+- Create: `infra/aws/Makefile`
 
-- [ ] **Step 1: Create `infra/terraform/outputs.tf`**
+- [ ] **Step 1: Create `infra/aws/outputs.tf`**
 
 ```hcl
 output "cluster_name" {
@@ -868,7 +868,7 @@ output "smoke_test_commands" {
 }
 ```
 
-- [ ] **Step 2: Create `infra/terraform/Makefile`**
+- [ ] **Step 2: Create `infra/aws/Makefile`**
 
 ```makefile
 SHELL := /bin/bash
@@ -921,8 +921,8 @@ smoke:
 - [ ] **Step 3: Format and validate**
 
 ```bash
-terraform -chdir=infra/terraform fmt
-terraform -chdir=infra/terraform validate
+terraform -chdir=infra/aws fmt
+terraform -chdir=infra/aws validate
 ```
 
 Expected: `Success! The configuration is valid.`
@@ -932,7 +932,7 @@ Expected: `Success! The configuration is valid.`
 (Skip `terraform plan` at this point — on a fresh apply, `data.kubernetes_service.backend` in `outputs.tf` cannot resolve because the cluster doesn't exist yet, so plan will error. This is handled by the staged apply in Task 9 Step 2.)
 
 ```bash
-git add infra/terraform/outputs.tf infra/terraform/Makefile
+git add infra/aws/outputs.tf infra/aws/Makefile
 git commit -m "feat(infra): outputs + Makefile convenience wrappers
 
 Outputs expose cluster name, region, ECR URL, image URI, the
@@ -968,7 +968,7 @@ aws sso login --profile cto-experts
 The `data.kubernetes_service.backend` in `outputs.tf` reads the Service at refresh time. On a fresh apply, the cluster doesn't exist yet, so that data source can't resolve and `terraform plan` may error. The standard workaround is a two-stage apply.
 
 ```bash
-cd infra/terraform
+cd infra/aws
 
 # Stage 1: build everything except the helm release + kubernetes data source
 terraform apply \
@@ -1044,9 +1044,9 @@ Report back with:
 ## Done criteria
 
 - [ ] All 8 tracked commits land on `feat/eks-deploy`.
-- [ ] `infra/terraform/` contains the 9 files listed above (plus `.terraform.lock.hcl`, which the `.gitignore` excludes).
+- [ ] `infra/aws/` contains the 9 files listed above (plus `.terraform.lock.hcl`, which the `.gitignore` excludes).
 - [ ] `terraform apply` succeeds end-to-end.
 - [ ] `curl http://<nlb-hostname>/api/users?username=alice` returns alice's row.
 - [ ] `curl --get 'http://<nlb-hostname>/api/users' --data-urlencode "username=' OR '1'='1"` returns all three rows.
 - [ ] `kubectl get pods` shows backend pod Running.
-- [ ] No changes outside `infra/terraform/` and `helm/sorcery-solutions-backend/values.yaml` (and the plan/spec docs already committed).
+- [ ] No changes outside `infra/aws/` and `helm/sorcery-solutions-backend/values.yaml` (and the plan/spec docs already committed).

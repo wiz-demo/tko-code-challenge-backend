@@ -19,7 +19,7 @@ the role ARN.
 ## First-time setup
 
 ```bash
-cd infra/wiz-connector
+cd infra/wiz
 
 # Fill in your Wiz secrets locally (file is gitignored — secrets won't be committed)
 cp terraform.tfvars.example terraform.tfvars
@@ -50,7 +50,7 @@ make destroy   # destroys connector first, then IAM role
 ## Layout
 
 ```
-infra/wiz-connector/
+infra/wiz/
 ├── versions.tf, providers.tf, variables.tf      Root module
 ├── connector_aws.tf                             wiz-v2_generic_connector resource
 ├── terraform.tfvars.example                     Reference values (no secrets)
@@ -70,5 +70,5 @@ triggers an `auth_params_hash__` inconsistency error.
 ## Things this won't do
 
 - Does NOT scan account `432513806796` (the `cto-experts` profile's account)
-- Does NOT modify the EKS deployment from `infra/terraform/`
+- Does NOT modify the EKS deployment from `infra/aws/`
 - Does NOT configure Bedrock, DocumentDB, or any other supporting service

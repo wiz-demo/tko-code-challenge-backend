@@ -86,7 +86,7 @@ docker buildx build --platform linux/amd64 \
 
 ## EKS deployment (Terraform)
 
-`infra/terraform/` provisions a complete EKS environment in AWS, including
+`infra/aws/` provisions a complete EKS environment in AWS, including
 VPC + subnets + NAT, ECR repo, EKS cluster (classic mode + managed node group),
 and a helm release of `helm/sorcery-solutions-backend/`. State is local.
 
@@ -97,7 +97,7 @@ and a helm release of `helm/sorcery-solutions-backend/`. State is local.
 - Terraform `>= 1.6`
 - `kubectl` (for post-apply verification)
 
-**Defaults** (overridable in `infra/terraform/variables.tf`):
+**Defaults** (overridable in `infra/aws/variables.tf`):
 
 - Region: `us-east-1`
 - AWS profile: `dev-product-cto-play` (must point at account `800618367342`)
@@ -113,7 +113,7 @@ before the cluster exists):
 ```bash
 aws sso login --profile dev-product-cto-play
 
-cd infra/terraform
+cd infra/aws
 terraform init
 terraform apply \
   -target=aws_eks_cluster.this \
@@ -125,7 +125,7 @@ terraform apply        # full apply once cluster exists
 Cluster creation alone takes ~10–15 min. Total wall time including node group
 and helm install is roughly 18–25 min.
 
-**Operator commands** (`make help` in `infra/terraform/` lists them):
+**Operator commands** (`make help` in `infra/aws/` lists them):
 
 ```bash
 make kubeconfig        # writes the cluster context into ~/.kube/config
@@ -157,7 +157,8 @@ docker/
   debian/Dockerfile          Standard Python image
   wizos/Dockerfile           Wiz OS image (private registry)
 helm/sorcery-solutions-backend/  Helm chart for k8s deploy
-infra/terraform/             EKS deployment IaC (see "EKS deployment" above)
+infra/aws/                       EKS deployment IaC (see "EKS deployment" above)
+infra/wiz/                       Wiz AWS connector + IAM role (Terraform v2)
 docs/superpowers/
   specs/                     Design specs for the demo features
   plans/                     Implementation plans for executing the specs
@@ -168,7 +169,7 @@ docs/superpowers/
 ## Tearing down the deployed cluster
 
 ```bash
-cd infra/terraform
+cd infra/aws
 make destroy
 ```
 
