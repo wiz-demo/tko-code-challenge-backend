@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-02
 **Status:** Approved
-**Target environment:** AWS account `800618367342` (`cto-experts` SSO profile, per project `CLAUDE.md`)
+**Target environment:** AWS account `800618367342` (`dev-product-cto-play` SSO profile, per project `CLAUDE.md`)
 
 ## Goal
 
@@ -95,7 +95,7 @@ deployed image includes the SQL-injection demo endpoint added by that branch.
 
 ### 1. Providers & tags (`main.tf`, `versions.tf`)
 
-- AWS provider `~> 5.70`, region `us-east-1`, profile `cto-experts`.
+- AWS provider `~> 5.70`, region `us-east-1`, profile `dev-product-cto-play`.
 - `default_tags`:
   - `owner = "itay.katz"`
   - `project = "sorcery-solutions-eks-demo"`
@@ -160,7 +160,7 @@ deployed image includes the SQL-injection demo endpoint added by that branch.
   the app or the Dockerfile re-builds.
 - `provisioner "local-exec"`:
   ```bash
-  aws ecr get-login-password --region us-east-1 --profile cto-experts \
+  aws ecr get-login-password --region us-east-1 --profile dev-product-cto-play \
     | docker login --username AWS --password-stdin <ECR registry>
   docker buildx build \
     --platform linux/amd64 \

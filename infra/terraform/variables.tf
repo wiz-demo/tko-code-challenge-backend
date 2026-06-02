@@ -10,8 +10,8 @@ variable "region" {
 
 variable "aws_profile" {
   type        = string
-  description = "AWS CLI profile (SSO). Per project CLAUDE.md."
-  default     = "cto-experts"
+  description = "AWS CLI profile (SSO) for account 800618367342. Verified via `aws sts get-caller-identity --profile <name>`."
+  default     = "dev-product-cto-play"
 }
 
 variable "owner" {
