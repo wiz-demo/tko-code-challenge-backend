@@ -1,19 +1,35 @@
-data "aws_eks_cluster_auth" "this" {
-  name = aws_eks_cluster.this.name
-}
-
 provider "helm" {
   kubernetes {
     host                   = aws_eks_cluster.this.endpoint
     cluster_ca_certificate = base64decode(aws_eks_cluster.this.certificate_authority[0].data)
-    token                  = data.aws_eks_cluster_auth.this.token
+
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args = [
+        "eks", "get-token",
+        "--cluster-name", aws_eks_cluster.this.name,
+        "--region", var.region,
+        "--profile", var.aws_profile,
+      ]
+    }
   }
 }
 
 provider "kubernetes" {
   host                   = aws_eks_cluster.this.endpoint
   cluster_ca_certificate = base64decode(aws_eks_cluster.this.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.this.token
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args = [
+      "eks", "get-token",
+      "--cluster-name", aws_eks_cluster.this.name,
+      "--region", var.region,
+      "--profile", var.aws_profile,
+    ]
+  }
 }
 
 resource "helm_release" "backend" {
@@ -26,7 +42,6 @@ resource "helm_release" "backend" {
       image = {
         repository = aws_ecr_repository.backend.repository_url
         tag        = local.image_tag
-        pullPolicy = "IfNotPresent"
       }
       service = {
         type = "LoadBalancer"
