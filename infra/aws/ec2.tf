@@ -32,10 +32,10 @@ resource "aws_security_group" "backend" {
 resource "aws_launch_template" "ecs" {
   name_prefix   = "code-challenge-"
   image_id      = data.aws_ssm_parameter.ecs_ami.value
-  instance_type = "t3.small"
+  instance_type = "t3.large"
 
   iam_instance_profile {
-    arn = aws_iam_instance_profile.ecs_instance.arn
+    name = aws_iam_instance_profile.ecs_instance.name
   }
 
   vpc_security_group_ids = [aws_security_group.backend.id]
