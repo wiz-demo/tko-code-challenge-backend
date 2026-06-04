@@ -46,10 +46,26 @@ resource "aws_launch_template" "ecs" {
   EOT
   )
 
+  # Tag the instance at creation time. The SCP on this account explicitly
+  # denies ec2:RunInstances unless owner/extend are present on the instance.
+  # ASG-level propagate_at_launch sets them too, but those are applied by the
+  # ASG service AFTER instance creation — the SCP check is at RunInstances
+  # time, so the launch template must carry them itself.
   tag_specifications {
     resource_type = "instance"
     tags = {
-      Name = "code-challenge-backend"
+      Name   = "code-challenge-backend"
+      owner  = var.owner
+      extend = "true"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "volume"
+    tags = {
+      Name   = "code-challenge-backend"
+      owner  = var.owner
+      extend = "true"
     }
   }
 }
