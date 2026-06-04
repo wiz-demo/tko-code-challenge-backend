@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 TF    := terraform
 
-.PHONY: help init fmt validate plan apply destroy outputs kubeconfig smoke
+.PHONY: help init fmt validate plan apply destroy outputs smoke
 
 help:
 	@echo "Targets:"
@@ -12,7 +12,6 @@ help:
 	@echo "  apply       - terraform apply (requires SSO)"
 	@echo "  destroy     - terraform destroy (requires SSO)"
 	@echo "  outputs     - refresh state and print outputs"
-	@echo "  kubeconfig  - write the cluster context into your kubeconfig"
 	@echo "  smoke       - hit the deployed endpoint with benign + exploit payloads"
 
 init:
@@ -36,9 +35,6 @@ destroy:
 outputs:
 	@$(TF) refresh > /dev/null
 	@$(TF) output
-
-kubeconfig:
-	@eval "$$($(TF) output -raw kubeconfig_command)"
 
 smoke:
 	@$(TF) refresh > /dev/null
