@@ -15,7 +15,7 @@ resource "aws_internet_gateway" "this" {
   }
 }
 
-# Public subnets (one per AZ): for the public NLB
+# Public subnets (one per AZ): host the ECS EC2 instance (public IP on :8000)
 resource "aws_subnet" "public" {
   count = length(local.azs)
 
@@ -29,7 +29,7 @@ resource "aws_subnet" "public" {
   }
 }
 
-# Private subnets (one per AZ): for pods
+# Private subnets (one per AZ): reserved, no workloads run here today
 resource "aws_subnet" "private" {
   count = length(local.azs)
 

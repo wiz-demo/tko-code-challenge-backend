@@ -11,6 +11,7 @@ crash.*.log
 
 # Plan files
 *.tfplan
+tfplan
 
 # Local tfvars (contain Wiz secrets) — never commit
 # The .example version IS committed as a reference.

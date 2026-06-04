@@ -5,9 +5,8 @@
 # Terraform IaC (provider cache is huge — never needed in image)
 infra/
 
-# Docs and helm chart (not part of the runtime image)
+# Docs (not part of the runtime image)
 docs/
-helm/
 *.md
 LICENSE
 CODEOWNERS

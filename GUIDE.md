@@ -13,16 +13,16 @@ Manually identify and exploit the SQL injection vulnerability using Wiz intellig
 1. Navigate to: **Inventory → Cloud Resources**
 2. Filter:
    - Subscription = `TF-AWS-Connector-CodeChallange`
-   - Type = `LOAD_BALANCER`
-3. Find: `k8s-wiztopiagroup-71f1d9cc2d`
+   - Type = `VIRTUAL_MACHINE`
+3. Find: the EC2 host tagged `Name = code-challenge-backend`
 
-**Question:** What is the external DNS endpoint for the load balancer?
-**Answer:** *(Copy from Wiz resource details)*
+**Question:** What is the public IP / DNS of the EC2 host?
+**Answer:** *(Copy from Wiz resource details — the app listens on port 8000)*
 
 **Alternative - Use Wiz Graph Search:**
 
 ```
-Ask Mika: "Show me all publicly exposed load balancers in subscription TF-AWS-Connector-CodeChallange"
+Ask Mika: "Show me all publicly exposed virtual machines in subscription TF-AWS-Connector-CodeChallange"
 ```
 
 ---
@@ -71,8 +71,8 @@ Ask Mika: "Show me all publicly exposed load balancers in subscription TF-AWS-Co
 
 **Question:** Where is this container running?
 **Answer:**
-- **Cluster:** `code-challenge` (EKS)
-- **Namespace:** `default`
+- **Cluster:** `code-challenge` (ECS on EC2)
+- **Capacity provider:** `code-challenge-ec2` (single-instance ASG)
 - **Container:** `code-challenge-backend`
 
 **Use Wiz to find the container:**
@@ -104,8 +104,8 @@ Filter: Name contains "code-challenge-backend"
 **Answer:**
 
 ```
-Internet (0.0.0.0/0) → Load Balancer (k8s-wiztopiagroup-71f1d9cc2d)
-→ Kubernetes Service → Pod (code-challenge-backend)
+Internet (0.0.0.0/0:8000) → EC2 host security group (code-challenge-backend)
+→ ECS task (bridge network) → container (code-challenge-backend)
 ```
 
 **Verify exposure in Wiz:**
