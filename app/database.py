@@ -17,7 +17,7 @@ sqlite_db.executemany(
     [
         (1, "alice", "alice@example.com", "user"),
         (2, "bob", "bob@example.com", "user"),
-        (3, "admin", "admin@sorcery.example", "admin"),
+        (3, "admin", "admin@code-challenge.example", "admin"),
     ],
 )
 sqlite_db.commit()

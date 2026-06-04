@@ -1,4 +1,4 @@
-# Sorcery Solutions Backend
+# Code Challenge Backend
 
 > **This repo is a security demo / CTF target. All secrets are fake. Several
 > endpoints contain INTENTIONAL vulnerabilities. Do NOT deploy this code into
@@ -55,7 +55,7 @@ The wildcard CORS on `app/main.py` (`allow_origins=["*"]` with
 ```bash
 # Mongo URI can be a placeholder — motor connects lazily, so endpoints
 # that don't touch Mongo work without a running database.
-MONGO_URI=mongodb://localhost:27017 MONGO_DB=sorcery_demo PYTHONPATH=app \
+MONGO_URI=mongodb://localhost:27017 MONGO_DB=code_challenge_demo PYTHONPATH=app \
   python3 -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -81,14 +81,14 @@ root:
 
 ```bash
 docker buildx build --platform linux/amd64 \
-  -f docker/debian/Dockerfile -t sorcery-backend:dev .
+  -f docker/debian/Dockerfile -t code-challenge-backend:dev .
 ```
 
 ## EKS deployment (Terraform)
 
 `infra/aws/` provisions a complete EKS environment in AWS, including
 VPC + subnets + NAT, ECR repo, EKS cluster (classic mode + managed node group),
-and a helm release of `helm/sorcery-solutions-backend/`. State is local.
+and a helm release of `helm/code-challenge-backend/`. State is local.
 
 **Prerequisites on the operator's machine:**
 
@@ -101,7 +101,7 @@ and a helm release of `helm/sorcery-solutions-backend/`. State is local.
 
 - Region: `us-east-1`
 - AWS profile: `dev-product-cto-play` (must point at account `800618367342`)
-- Cluster name: `sorcery-demo`
+- Cluster name: `code-challenge`
 - Kubernetes version: `1.32`
 - Node group: 1× `t3.large` (chosen to satisfy the playground SCP that
   restricts EC2 to `t2/t3/t4g/c5/m5` `large`/`xlarge`)
@@ -156,7 +156,7 @@ app/                         FastAPI app
 docker/
   debian/Dockerfile          Standard Python image
   wizos/Dockerfile           Wiz OS image (private registry)
-helm/sorcery-solutions-backend/  Helm chart for k8s deploy
+helm/code-challenge-backend/  Helm chart for k8s deploy
 infra/aws/                       EKS deployment IaC (see "EKS deployment" above)
 infra/wiz/                       Wiz AWS connector + IAM role (Terraform v2)
 docs/superpowers/

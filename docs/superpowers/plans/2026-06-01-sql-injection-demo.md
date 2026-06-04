@@ -16,7 +16,7 @@
 
 ```bash
 export MONGO_URI=mongodb://localhost:27017
-export MONGO_DB=sorcery_demo
+export MONGO_DB=code_challenge_demo
 ```
 
 (Mongo itself does NOT need to be reachable — motor connects lazily. Only the env vars must be set so `client[MONGO_DB]` does not receive `None`.)
@@ -71,7 +71,7 @@ sqlite_db.executemany(
     [
         (1, "alice", "alice@example.com", "user"),
         (2, "bob", "bob@example.com", "user"),
-        (3, "admin", "admin@sorcery.example", "admin"),
+        (3, "admin", "admin@code-challenge.example", "admin"),
     ],
 )
 sqlite_db.commit()
@@ -82,7 +82,7 @@ sqlite_db.commit()
 Run from the repo root:
 
 ```bash
-MONGO_URI=mongodb://localhost:27017 MONGO_DB=sorcery_demo \
+MONGO_URI=mongodb://localhost:27017 MONGO_DB=code_challenge_demo \
   python -c "
 import sys
 sys.path.insert(0, 'app')
@@ -97,7 +97,7 @@ Expected output (exactly three lines):
 ```
 (1, 'alice', 'alice@example.com', 'user')
 (2, 'bob', 'bob@example.com', 'user')
-(3, 'admin', 'admin@sorcery.example', 'admin')
+(3, 'admin', 'admin@code-challenge.example', 'admin')
 ```
 
 If you see `TypeError: name must be an instance of str` or similar, the `MONGO_DB` env var is missing — re-export it.
@@ -159,7 +159,7 @@ async def get_users(username: str | None = None):
 `app/main.py` uses top-level imports (`from schemas import ...`, `from database import db`), so uvicorn must be invoked with `app/` on `PYTHONPATH`:
 
 ```bash
-MONGO_URI=mongodb://localhost:27017 MONGO_DB=sorcery_demo PYTHONPATH=app \
+MONGO_URI=mongodb://localhost:27017 MONGO_DB=code_challenge_demo PYTHONPATH=app \
   uvicorn main:app --host 127.0.0.1 --port 8765 > /tmp/uvicorn.log 2>&1 &
 echo $! > /tmp/uvicorn.pid
 sleep 2
@@ -189,7 +189,7 @@ curl -s --get 'http://127.0.0.1:8765/api/users' --data-urlencode "username=' OR 
 Expected output (all three seeded users):
 
 ```json
-[{"id":1,"username":"alice","email":"alice@example.com","role":"user"},{"id":2,"username":"bob","email":"bob@example.com","role":"user"},{"id":3,"username":"admin","email":"admin@sorcery.example","role":"admin"}]
+[{"id":1,"username":"alice","email":"alice@example.com","role":"user"},{"id":2,"username":"bob","email":"bob@example.com","role":"user"},{"id":3,"username":"admin","email":"admin@code-challenge.example","role":"admin"}]
 ```
 
 If you instead see `[]`, the f-string interpolation did not happen — confirm Step 3's `query = f"..."` uses an `f` prefix and single quotes around `{username}`.

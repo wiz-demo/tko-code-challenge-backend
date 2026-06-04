@@ -1,4 +1,4 @@
-# EKS Deployment for sorcery-solutions-backend
+# EKS Deployment for code-challenge-backend
 
 **Date:** 2026-06-02
 **Status:** Approved
@@ -51,7 +51,7 @@ and installs the existing Helm chart.
 │  │   ┌──────────────────────────────────────────┐   │    │
 │  │   │  EKS Auto Mode cluster (k8s 1.32)        │   │    │
 │  │   │  ┌────────────────────────────────────┐  │   │    │
-│  │   │  │ Deployment: sorcery-solutions-...  │  │   │    │
+│  │   │  │ Deployment: code-challenge-solutions-...  │  │   │    │
 │  │   │  │ ┌──────────────────┐               │  │   │    │
 │  │   │  │ │ Pod (port 8000)  │               │  │   │    │
 │  │   │  │ └──────────────────┘               │  │   │    │
@@ -83,7 +83,7 @@ infra/aws/
 ├── eks.tf         # EKS Auto Mode cluster + caller access entry
 ├── ecr.tf         # ECR repository
 ├── image.tf       # null_resource: docker login/build/push
-├── k8s.tf         # helm_release of helm/sorcery-solutions-backend
+├── k8s.tf         # helm_release of helm/code-challenge-backend
 ├── outputs.tf     # cluster name, ECR URL, kubeconfig cmd, NLB hostname
 └── Makefile       # init, plan, apply, destroy, kubeconfig, smoke
 ```
@@ -98,7 +98,7 @@ deployed image includes the SQL-injection demo endpoint added by that branch.
 - AWS provider `~> 5.70`, region `us-east-1`, profile `dev-product-cto-play`.
 - `default_tags`:
   - `owner = "itay.katz"`
-  - `project = "sorcery-solutions-eks-demo"`
+  - `project = "code-challenge"`
 - No `extend` tag — accept the 30-day auto-cleanup as the safety net.
 - helm `~> 2.15`, kubernetes `~> 2.32`, null `~> 3.2`.
 - Terraform `>= 1.6`.
@@ -145,7 +145,7 @@ deployed image includes the SQL-injection demo endpoint added by that branch.
 
 ### 4. Container registry (`ecr.tf`)
 
-- `aws_ecr_repository` `sorcery-solutions-backend`:
+- `aws_ecr_repository` `code-challenge-backend`:
   - `image_scanning_configuration.scan_on_push = true` (lets Wiz scan).
   - `image_tag_mutability = "MUTABLE"` (so re-builds with the same tag work
     during iteration).
@@ -176,15 +176,15 @@ deployed image includes the SQL-injection demo endpoint added by that branch.
 
 ### 6. Kubernetes deployment (`k8s.tf`)
 
-- `helm_release` of `../../helm/sorcery-solutions-backend`, release name
-  `sorcery-solutions-backend`, namespace `default`.
+- `helm_release` of `../../helm/code-challenge-backend`, release name
+  `code-challenge-backend`, namespace `default`.
 - Value overrides (passed via `set` blocks or a generated values fragment):
   ```yaml
   image.repository:             <ECR repository URL>
   image.tag:                    <git SHA from image.tf>
   service.type:                 LoadBalancer
   env.MONGO_URI:                "mongodb://placeholder:27017"
-  env.MONGO_DB:                 "sorcery_demo"
+  env.MONGO_DB:                 "code_challenge_demo"
   livenessProbe.httpGet.path:   /openapi.json
   livenessProbe.httpGet.port:   http
   readinessProbe.httpGet.path:  /openapi.json

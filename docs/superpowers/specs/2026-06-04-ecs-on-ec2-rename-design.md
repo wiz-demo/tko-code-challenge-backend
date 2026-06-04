@@ -1,4 +1,4 @@
-# Replace EKS with ECS-on-EC2; rename sorcery → code-challenge
+# Replace EKS with ECS-on-EC2; rename code-challenge → code-challenge
 
 **Date:** 2026-06-04
 **Supersedes:** `2026-06-02-eks-deploy-design.md`
@@ -6,7 +6,7 @@
 ## Goals
 
 1. Replace the EKS + Helm runtime with a minimal AWS-native container deploy: ECS cluster, one EC2 instance, one task, public on port 8000.
-2. Rename every occurrence of `sorcery` to `code-challenge` across code, config, infrastructure resource names, and historical documentation.
+2. Rename every occurrence of `code-challenge` to `code-challenge` across code, config, infrastructure resource names, and historical documentation.
 3. Trim the app to two intentional-vuln endpoints plus a sample-text root. Drop MongoDB, Bedrock, and YAML-deserialization endpoints.
 
 The result honors "simple EC2, all Terraform": ECS handles container lifecycle (pull/run/restart) declaratively, no hand-written shell beyond the one-line `ECS_CLUSTER=` user-data.
@@ -49,17 +49,17 @@ internet → SG :8000 → EC2 (ECS-optimized AL2023 AMI)
 | File | Change | Resources |
 |---|---|---|
 | `infra/aws/vpc.tf` | modified | Drop `kubernetes.io/role/elb` and `kubernetes.io/role/internal-elb` subnet tags. Keep VPC + public/private subnets. |
-| `infra/aws/ecr.tf` | modified | Rename `aws_ecr_repository.backend.name` from `sorcery-solutions-backend` to `code-challenge-backend`. Lifecycle policy unchanged. |
+| `infra/aws/ecr.tf` | modified | Rename `aws_ecr_repository.backend.name` from `code-challenge-backend` to `code-challenge-backend`. Lifecycle policy unchanged. |
 | `infra/aws/image.tf` | unchanged logic | `terraform_data.image_build` still does buildx + push. Retags to the new ECR URL automatically via reference. |
 | `infra/aws/ecs.tf` | new | `aws_ecs_cluster`, `aws_cloudwatch_log_group`, `aws_ecs_task_definition`, `aws_ecs_service`, `aws_ecs_cluster_capacity_providers`. |
 | `infra/aws/ec2.tf` | new | `aws_launch_template`, `aws_autoscaling_group`, `aws_ecs_capacity_provider`, `aws_security_group`. |
 | `infra/aws/iam.tf` | new | EC2 instance role, instance profile, ECS task execution role. |
 | `infra/aws/outputs.tf` | modified | Replace `service_hostname` with `instance_public_ip` / `instance_public_dns` (via `aws_instances` data source filtered by the ASG name). Update `smoke_test_commands`. |
-| `infra/aws/variables.tf` | modified | Rename `var.cluster_name` → `var.ecs_cluster_name` (default `code-challenge`). Update `var.project` default `sorcery-solutions-eks-demo` → `code-challenge`. Delete `var.kubernetes_version`. Keep `region`, `aws_profile`, `owner`, `vpc_cidr` unchanged. |
+| `infra/aws/variables.tf` | modified | Rename `var.cluster_name` → `var.ecs_cluster_name` (default `code-challenge`). Update `var.project` default `code-challenge` → `code-challenge`. Delete `var.kubernetes_version`. Keep `region`, `aws_profile`, `owner`, `vpc_cidr` unchanged. |
 | `infra/aws/versions.tf` | modified | Drop `hashicorp/helm` and `hashicorp/kubernetes` provider requirements. Keep `hashicorp/aws`, `hashicorp/external`. |
 | `infra/aws/eks.tf` | **deleted** | — |
 | `infra/aws/k8s.tf` | **deleted** | — |
-| `helm/sorcery-solutions-backend/` | **deleted** | Entire directory. |
+| `helm/code-challenge-backend/` | **deleted** | Entire directory. |
 
 ### Key resource specifics
 
@@ -137,7 +137,7 @@ Also drop these imports/blocks: `import yaml`, `import boto3`, `from botocore.ex
 
 - Delete: `motor.motor_asyncio` import, `load_dotenv`, `MONGO_URI`, `MONGO_DB`, `client`, `db`.
 - Keep: the in-memory SQLite block, seeded with 3 rows.
-- Rename seed: `admin@sorcery.example` → `admin@code-challenge.example`.
+- Rename seed: `admin@code-challenge.example` → `admin@code-challenge.example`.
 
 ### `app/schemas.py`
 
@@ -162,26 +162,26 @@ No functional change. The smaller `requirements.txt` just builds faster. Verify 
 - `import yaml`, `import boto3`, etc. are removed. The Wiz SCA "vulnerable dependency" demo around the pinned PyYAML version goes away. User opted to drop these for simplicity.
 - Mongo connectivity error path is gone — no more `motor` connection attempts at startup.
 
-## Rename: sorcery → code-challenge
+## Rename: code-challenge → code-challenge
 
 ### Strict rule
 
-Every textual occurrence of `sorcery` becomes `code-challenge`. Applies to: live code, infrastructure, configuration, READMEs, GUIDE, **and historical docs under `docs/superpowers/plans/` and `docs/superpowers/specs/`**. User explicitly chose to rewrite the historical docs as well.
+Every textual occurrence of `code-challenge` becomes `code-challenge`. Applies to: live code, infrastructure, configuration, READMEs, GUIDE, **and historical docs under `docs/superpowers/plans/` and `docs/superpowers/specs/`**. User explicitly chose to rewrite the historical docs as well.
 
 ### Resource-level renames
 
 | Old | New |
 |---|---|
-| `helm/sorcery-solutions-backend/` (dir) | deleted entirely |
-| ECR repo `sorcery-solutions-backend` | `code-challenge-backend` |
-| EKS cluster `sorcery-demo` | n/a — cluster destroyed |
-| `var.project` default `sorcery-solutions-eks-demo` | `code-challenge` |
-| `var.cluster_name` (renamed to `var.ecs_cluster_name`) default `sorcery-demo` | `code-challenge` |
-| Tag `Project = "sorcery-wiz-connector"` (infra/wiz) | `Project = "code-challenge-wiz-connector"` |
-| Terraform resource `wiz-v2_generic_connector.aws_sorcery` | `wiz-v2_generic_connector.aws_code_challenge` |
-| `app/database.py` seed `admin@sorcery.example` | `admin@code-challenge.example` |
-| `README.md` title "Sorcery Solutions Backend" | "Code Challenge Backend" |
-| All other prose `sorcery*` references | `code-challenge*` |
+| `helm/code-challenge-backend/` (dir) | deleted entirely |
+| ECR repo `code-challenge-backend` | `code-challenge-backend` |
+| EKS cluster `code-challenge` | n/a — cluster destroyed |
+| `var.project` default `code-challenge` | `code-challenge` |
+| `var.cluster_name` (renamed to `var.ecs_cluster_name`) default `code-challenge` | `code-challenge` |
+| Tag `Project = "code-challenge-wiz-connector"` (infra/wiz) | `Project = "code-challenge-wiz-connector"` |
+| Terraform resource `wiz-v2_generic_connector.aws_code_challenge` | `wiz-v2_generic_connector.aws_code_challenge` |
+| `app/database.py` seed `admin@code-challenge.example` | `admin@code-challenge.example` |
+| `README.md` title "Code Challenge Backend" | "Code Challenge Backend" |
+| All other prose `code-challenge*` references | `code-challenge*` |
 
 ### Wiz state continuity — `moved` block
 
@@ -189,7 +189,7 @@ To preserve the existing Wiz connector and its scan history despite the Terrafor
 
 ```hcl
 moved {
-  from = wiz-v2_generic_connector.aws_sorcery
+  from = wiz-v2_generic_connector.aws_code_challenge
   to   = wiz-v2_generic_connector.aws_code_challenge
 }
 ```
@@ -198,7 +198,7 @@ The connector's `id` (state) is preserved; only the address changes. The `Projec
 
 ### ECR repo rename — destroy + create
 
-`aws_ecr_repository.backend` keeps its Terraform address; only the `name` attribute changes. Terraform will destroy the old `sorcery-solutions-backend` repo and create `code-challenge-backend`. This drops any images currently in the old repo. Acceptable: `image.tf` rebuilds and pushes on every apply.
+`aws_ecr_repository.backend` keeps its Terraform address; only the `name` attribute changes. Terraform will destroy the old `code-challenge-backend` repo and create `code-challenge-backend`. This drops any images currently in the old repo. Acceptable: `image.tf` rebuilds and pushes on every apply.
 
 ## Migration / apply order
 
@@ -221,15 +221,15 @@ From `infra/aws/`:
      -target=aws_iam_role.node \
      -target=aws_iam_role.cluster
    ```
-3. Verify in AWS console: no ELBs in `us-east-1`, no EKS cluster `sorcery-demo`. (Old ECR repo deletion happens in Phase 2.)
+3. Verify in AWS console: no ELBs in `us-east-1`, no EKS cluster `code-challenge`. (Old ECR repo deletion happens in Phase 2.)
 
 ### Phase 2 — Restructure code, then apply
 
-4. Delete `infra/aws/eks.tf`, `infra/aws/k8s.tf`, `helm/sorcery-solutions-backend/`.
+4. Delete `infra/aws/eks.tf`, `infra/aws/k8s.tf`, `helm/code-challenge-backend/`.
 5. Drop `hashicorp/helm` and `hashicorp/kubernetes` from `infra/aws/versions.tf`.
 6. Add `infra/aws/ecs.tf`, `infra/aws/ec2.tf`, `infra/aws/iam.tf`.
 7. Modify `ecr.tf` (rename), `variables.tf` (defaults), `outputs.tf` (new outputs), `vpc.tf` (drop subnet tags).
-8. Rename `sorcery` → `code-challenge` across all remaining files (app, README, GUIDE, historical docs, wiz tfvars).
+8. Rename `code-challenge` → `code-challenge` across all remaining files (app, README, GUIDE, historical docs, wiz tfvars).
 9. Add `moved` block in `infra/wiz/`.
 10. `cd infra/aws && terraform init -upgrade && terraform apply` — expected plan: destroy old ECR, create new ECR, image rebuild + push, ECS cluster, EC2 launch template + ASG, capacity provider, ECS task, ECS service, IAM roles, log group, SG.
 11. `cd infra/wiz && terraform apply` — expected plan: in-place tag update on the connector (project tag), `moved` block applied (no destroy), zero infra churn.

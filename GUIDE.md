@@ -67,19 +67,19 @@ Ask Mika: "Show me all publicly exposed load balancers in subscription TF-AWS-Co
 **Or navigate to:** Code to Cloud → Correlations
 
 **Question:** Which container image was built from this repository?
-**Answer:** `800618367342.dkr.ecr.us-east-1.amazonaws.com/sorcery-solutions-backend@bbd5a30f`
+**Answer:** `800618367342.dkr.ecr.us-east-1.amazonaws.com/code-challenge-backend@bbd5a30f`
 
 **Question:** Where is this container running?
 **Answer:**
-- **Cluster:** `sorcery-demo` (EKS)
+- **Cluster:** `code-challenge` (EKS)
 - **Namespace:** `default`
-- **Container:** `sorcery-solutions-backend`
+- **Container:** `code-challenge-backend`
 
 **Use Wiz to find the container:**
 
 ```
 Navigate to: Inventory → Containers
-Filter: Name contains "sorcery-solutions-backend"
+Filter: Name contains "code-challenge-backend"
 ```
 
 ---
@@ -91,7 +91,7 @@ Filter: Name contains "sorcery-solutions-backend"
 **Ask Mika:**
 
 ```
-"Show me the network exposure path for container sorcery-solutions-backend"
+"Show me the network exposure path for container code-challenge-backend"
 ```
 
 **Or use Graph Search:**
@@ -105,12 +105,12 @@ Filter: Name contains "sorcery-solutions-backend"
 
 ```
 Internet (0.0.0.0/0) → Load Balancer (k8s-wiztopiagroup-71f1d9cc2d)
-→ Kubernetes Service → Pod (sorcery-solutions-backend)
+→ Kubernetes Service → Pod (code-challenge-backend)
 ```
 
 **Verify exposure in Wiz:**
 - Navigate to: **Security Graph → Network Exposure**
-- Filter: Exposed Entity = `sorcery-solutions-backend`
+- Filter: Exposed Entity = `code-challenge-backend`
 
 ---
 
@@ -175,7 +175,7 @@ curl -X POST http://$ENDPOINT/api/login \
 **Navigate to:** Data Security → Data Findings
 
 **Filter:**
-- Resource: Container `sorcery-solutions-backend`
+- Resource: Container `code-challenge-backend`
 - Or: Subscription = `TF-AWS-Connector-CodeChallange`
 
 **Question:** What sensitive data does Wiz detect in this environment?
@@ -209,13 +209,13 @@ curl -X POST http://$ENDPOINT/api/login \
 **Navigate to:** Issues → Risk Issues
 
 **Filter:**
-- Resource: `sorcery-solutions-backend`
+- Resource: `code-challenge-backend`
 - Or: Search for "SQL Injection"
 
 **Ask Mika:**
 
 ```
-"Show me all security issues for container sorcery-solutions-backend"
+"Show me all security issues for container code-challenge-backend"
 ```
 
 **Question:** Did Wiz create a security issue for this vulnerability?
@@ -228,7 +228,7 @@ curl -X POST http://$ENDPOINT/api/login \
 - SAST Finding: Unparameterized SQL Query (app/main.py:64)
 - Exposure: Internet-accessible via Load Balancer
 - Risk: Data breach, unauthorized access
-- Affected Resource: sorcery-solutions-backend
+- Affected Resource: code-challenge-backend
 ```
 
 ---
@@ -240,13 +240,13 @@ curl -X POST http://$ENDPOINT/api/login \
 **Ask Mika:**
 
 ```
-"What other resources have access to the same data as sorcery-solutions-backend?"
+"What other resources have access to the same data as code-challenge-backend?"
 ```
 
 **Or use Graph Search:**
 
 ```
-"Find all resources with access to the same database as container sorcery-solutions-backend"
+"Find all resources with access to the same database as container code-challenge-backend"
 ```
 
 **Question:** If this SQL injection is exploited, what else is at risk?

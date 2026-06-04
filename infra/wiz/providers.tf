@@ -8,7 +8,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "sorcery-wiz-connector"
+      Project     = "code-challenge-wiz-connector"
       Environment = terraform.workspace
       ManagedBy   = "Terraform"
       owner       = var.owner

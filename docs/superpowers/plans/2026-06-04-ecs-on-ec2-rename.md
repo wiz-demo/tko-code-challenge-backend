@@ -1,8 +1,8 @@
-# ECS-on-EC2 + sorcery → code-challenge Implementation Plan
+# ECS-on-EC2 + code-challenge → code-challenge Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace EKS+Helm with a minimal ECS-on-EC2 deploy, trim the FastAPI app to two intentional-vuln endpoints + a sample root, and rename every occurrence of `sorcery` to `code-challenge` across the repo.
+**Goal:** Replace EKS+Helm with a minimal ECS-on-EC2 deploy, trim the FastAPI app to two intentional-vuln endpoints + a sample root, and rename every occurrence of `code-challenge` to `code-challenge` across the repo.
 
 **Architecture:** Single ECS cluster `code-challenge`, one EC2 instance from an ASG (desired=1) running the ECS-optimized Amazon Linux 2023 AMI, one task definition pulling the container image from ECR (`code-challenge-backend`), one ECS service. Public ingress on `:8000` directly to the instance via security group. Shell access via SSM Session Manager (no SSH). Image build pipeline (`image.tf`) unchanged.
 
@@ -75,7 +75,7 @@ async def execute_command(command: str | None = None):
 
 - [ ] **Step 2: Rewrite `app/database.py`**
 
-Replace the entire file contents with (no rename — the email keeps `@sorcery.example` for now; Task 8 renames it):
+Replace the entire file contents with (no rename — the email keeps `@code-challenge.example` for now; Task 8 renames it):
 
 ```python
 import sqlite3
@@ -97,7 +97,7 @@ sqlite_db.executemany(
     [
         (1, "alice", "alice@example.com", "user"),
         (2, "bob", "bob@example.com", "user"),
-        (3, "admin", "admin@sorcery.example", "admin"),
+        (3, "admin", "admin@code-challenge.example", "admin"),
     ],
 )
 sqlite_db.commit()
@@ -184,7 +184,7 @@ terraform destroy \
   -auto-approve
 ```
 
-Expected: helm release `sorcery-solutions-backend` removed, ELB `a4df26972a50b4187b0bbcb0775f08cb` deleted (verify in console under EC2 → Load Balancers, region us-east-1).
+Expected: helm release `code-challenge-backend` removed, ELB `a4df26972a50b4187b0bbcb0775f08cb` deleted (verify in console under EC2 → Load Balancers, region us-east-1).
 
 - [ ] **Step 3: Targeted destroy of EKS cluster + node group + IAM**
 
@@ -201,13 +201,13 @@ terraform destroy \
   -auto-approve
 ```
 
-Expected: EKS cluster `sorcery-demo`, node group `general`, both IAM roles destroyed. Takes ~10 minutes.
+Expected: EKS cluster `code-challenge`, node group `general`, both IAM roles destroyed. Takes ~10 minutes.
 
 - [ ] **Step 4: Verify in AWS**
 
 ```bash
 aws eks list-clusters --profile dev-product-cto-play --region us-east-1
-aws elbv2 describe-load-balancers --profile dev-product-cto-play --region us-east-1 --query 'LoadBalancers[?contains(LoadBalancerName, `sorcery`)]' --output json
+aws elbv2 describe-load-balancers --profile dev-product-cto-play --region us-east-1 --query 'LoadBalancers[?contains(LoadBalancerName, `code-challenge`)]' --output json
 aws elb describe-load-balancers --profile dev-product-cto-play --region us-east-1 --query 'LoadBalancerDescriptions[?contains(LoadBalancerName, `a4df`)]' --output json
 ```
 
@@ -224,7 +224,7 @@ No git commit — only state changed.
 **Files:**
 - Delete: `infra/aws/eks.tf`
 - Delete: `infra/aws/k8s.tf`
-- Delete: `helm/sorcery-solutions-backend/` (entire directory)
+- Delete: `helm/code-challenge-backend/` (entire directory)
 - Modify: `infra/aws/versions.tf`
 - Modify: `infra/aws/vpc.tf`
 - Modify: `infra/aws/Makefile`
@@ -233,7 +233,7 @@ No git commit — only state changed.
 
 ```bash
 rm infra/aws/eks.tf infra/aws/k8s.tf
-rm -rf helm/sorcery-solutions-backend
+rm -rf helm/code-challenge-backend
 ```
 
 - [ ] **Step 2: Rewrite `infra/aws/versions.tf` to drop helm + kubernetes**
@@ -303,7 +303,7 @@ git commit -m "$(cat <<'EOF'
 chore(infra): remove EKS terraform, helm chart, and k8s/helm providers
 
 Phase 2a of the EKS → ECS migration. Deletes eks.tf, k8s.tf, the
-sorcery-solutions-backend helm chart directory, drops the helm and
+code-challenge-backend helm chart directory, drops the helm and
 kubernetes provider declarations from versions.tf, removes the
 EKS-specific kubernetes.io subnet tags from vpc.tf, and removes the
 now-dead kubeconfig Makefile target.
@@ -819,7 +819,7 @@ git add infra/aws/
 git commit -m "$(cat <<'EOF'
 refactor(infra): rename ECR repo, restructure vars, replace EKS outputs
 
-ECR repo sorcery-solutions-backend → code-challenge-backend.
+ECR repo code-challenge-backend → code-challenge-backend.
 var.cluster_name → var.ecs_cluster_name (default code-challenge).
 var.project default → code-challenge.
 Delete var.kubernetes_version.
@@ -831,9 +831,9 @@ EOF
 
 ---
 
-## Task 8: Rename `sorcery` → `code-challenge` across remaining files + add Wiz `moved` block
+## Task 8: Rename `code-challenge` → `code-challenge` across remaining files + add Wiz `moved` block
 
-**Files (any file containing the literal `sorcery`):**
+**Files (any file containing the literal `code-challenge`):**
 - Modify: `app/database.py` (seed email)
 - Modify: `infra/wiz/providers.tf` (Project tag)
 - Modify: `infra/wiz/wiz-iam/providers.tf` (Project tag)
@@ -845,57 +845,57 @@ EOF
 - Modify: `docs/superpowers/specs/2026-06-01-sql-injection-demo-design.md`
 - Modify: `docs/superpowers/specs/2026-06-02-eks-deploy-design.md`
 
-- [ ] **Step 1: List every file currently containing `sorcery`**
+- [ ] **Step 1: List every file currently containing `code-challenge`**
 
 ```bash
-grep -ril 'sorcery' . --exclude-dir=.git --exclude-dir=.terraform
+grep -ril 'code-challenge' . --exclude-dir=.git --exclude-dir=.terraform
 ```
 
 Expected: the files listed above. Note any unexpected files in the output and stop to investigate. The new spec/plan (`2026-06-04-*`) should also appear because they reference the rename — that's fine, see Step 4.
 
 - [ ] **Step 2: Global rename across all listed files**
 
-Use sed in-place. This handles all naming styles in the codebase (`sorcery`, `sorcery-solutions-backend`, `sorcery-demo`, `sorcery-wiz-connector`, `sorcery-solutions-eks-demo`, etc.) — but the replacement target depends on the prior naming style. We do TWO passes:
+Use sed in-place. This handles all naming styles in the codebase (`code-challenge`, `code-challenge-backend`, `code-challenge`, `code-challenge-wiz-connector`, `code-challenge`, etc.) — but the replacement target depends on the prior naming style. We do TWO passes:
 
 1. First, replace the compound names that need specific targets:
 
 ```bash
-# Strict substring replacement — works for: sorcery-solutions-backend → code-challenge-backend,
-# sorcery-demo → code-challenge, sorcery-wiz-connector → code-challenge-wiz-connector,
-# sorcery-solutions-eks-demo → code-challenge, sorcery.example → code-challenge.example
+# Strict substring replacement — works for: code-challenge-backend → code-challenge-backend,
+# code-challenge → code-challenge, code-challenge-wiz-connector → code-challenge-wiz-connector,
+# code-challenge → code-challenge, code-challenge.example → code-challenge.example
 # By doing it in this order, we don't accidentally double-replace.
 
 find . -type f \
   ! -path './.git/*' ! -path '*/.terraform/*' \
-  -exec grep -l 'sorcery' {} \; \
+  -exec grep -l 'code-challenge' {} \; \
 | while read -r f; do
     # Most specific patterns first
     sed -i '' \
-      -e 's|sorcery-solutions-eks-demo|code-challenge|g' \
-      -e 's|sorcery-solutions-backend|code-challenge-backend|g' \
-      -e 's|sorcery-wiz-connector|code-challenge-wiz-connector|g' \
-      -e 's|sorcery-demo|code-challenge|g' \
-      -e 's|sorcery_demo|code_challenge_demo|g' \
-      -e 's|@sorcery\.example|@code-challenge.example|g' \
-      -e 's|aws_sorcery|aws_code_challenge|g' \
-      -e 's|sorcery|code-challenge|g' \
+      -e 's|code-challenge|code-challenge|g' \
+      -e 's|code-challenge-backend|code-challenge-backend|g' \
+      -e 's|code-challenge-wiz-connector|code-challenge-wiz-connector|g' \
+      -e 's|code-challenge|code-challenge|g' \
+      -e 's|code_challenge_demo|code_challenge_demo|g' \
+      -e 's|@code-challenge\.example|@code-challenge.example|g' \
+      -e 's|aws_code_challenge|aws_code_challenge|g' \
+      -e 's|code-challenge|code-challenge|g' \
       "$f"
   done
 ```
 
-The last `s|sorcery|code-challenge|g` is a catch-all for any remaining bare `sorcery` (e.g., README prose like "Sorcery Solutions").
+The last `s|code-challenge|code-challenge|g` is a catch-all for any remaining bare `code-challenge` (e.g., README prose like "Code Challenge").
 
 2. Verify nothing remains:
 
 ```bash
-grep -ril 'sorcery' . --exclude-dir=.git --exclude-dir=.terraform
+grep -ril 'code-challenge' . --exclude-dir=.git --exclude-dir=.terraform
 ```
 
 Expected: empty.
 
 - [ ] **Step 3: Fix `README.md` title casing**
 
-The sed pass turns "Sorcery Solutions Backend" into "code-challenge Solutions Backend" — clean that up:
+The sed pass turns "Code Challenge Backend" into "code-challenge Solutions Backend" — clean that up:
 
 ```bash
 sed -i '' \
@@ -903,10 +903,10 @@ sed -i '' \
   README.md
 ```
 
-Also check if the README has any other "Sorcery Solutions" (with title casing) prose that needs human-readable cleanup. The sed pass only handles lowercase `sorcery`. Search:
+Also check if the README has any other "Code Challenge" (with title casing) prose that needs human-readable cleanup. The sed pass only handles lowercase `code-challenge`. Search:
 
 ```bash
-grep -i 'sorcery' README.md GUIDE.md
+grep -i 'code-challenge' README.md GUIDE.md
 ```
 
 Expected: empty (case-insensitive).
@@ -915,17 +915,17 @@ If matches surface, apply manual edits to make the prose read naturally.
 
 - [ ] **Step 4: Add Wiz `moved` block to preserve state**
 
-The sed pass in Step 2 renamed `wiz-v2_generic_connector.aws_sorcery` to `wiz-v2_generic_connector.aws_code_challenge` in `infra/wiz/connector_aws.tf`. Without a `moved` block, Terraform will plan to destroy + create. Append the `moved` block.
+The sed pass in Step 2 renamed `wiz-v2_generic_connector.aws_code_challenge` to `wiz-v2_generic_connector.aws_code_challenge` in `infra/wiz/connector_aws.tf`. Without a `moved` block, Terraform will plan to destroy + create. Append the `moved` block.
 
 Append to the end of `infra/wiz/connector_aws.tf`:
 
 ```hcl
 
-# Preserve state across the sorcery → code-challenge rename. Without this,
+# Preserve state across the code-challenge → code-challenge rename. Without this,
 # `terraform apply` would destroy and recreate the connector, losing scan
 # history and re-onboarding the AWS account in Wiz.
 moved {
-  from = wiz-v2_generic_connector.aws_sorcery
+  from = wiz-v2_generic_connector.aws_code_challenge
   to   = wiz-v2_generic_connector.aws_code_challenge
 }
 ```
@@ -947,7 +947,7 @@ cd ..
 ```
 
 Expected output should include a `Terraform will perform the following actions:` section showing:
-- `wiz-v2_generic_connector.aws_sorcery has moved to wiz-v2_generic_connector.aws_code_challenge` (no destroy/create)
+- `wiz-v2_generic_connector.aws_code_challenge has moved to wiz-v2_generic_connector.aws_code_challenge` (no destroy/create)
 - An in-place update on the connector's tags (Project tag value change)
 - No other changes
 
@@ -958,7 +958,7 @@ If the plan shows destroy + create for the connector, the `moved` block didn't t
 ```bash
 git add -A
 git commit -m "$(cat <<'EOF'
-refactor: rename sorcery → code-challenge across repo
+refactor: rename code-challenge → code-challenge across repo
 
 App seed email, Wiz Project tag and connector resource address, README,
 GUIDE, and historical plans/specs all renamed. Wiz `moved` block
@@ -989,7 +989,7 @@ cd infra/aws && terraform plan -out=tfplan
 ```
 
 Expected plan summary:
-- **Destroy:** `aws_ecr_repository.backend` (the old `sorcery-solutions-backend` repo)
+- **Destroy:** `aws_ecr_repository.backend` (the old `code-challenge-backend` repo)
 - **Create:** new `aws_ecr_repository.backend` named `code-challenge-backend`, `aws_ecr_lifecycle_policy.backend` (re-created), `aws_iam_role.ecs_instance`, `aws_iam_role.ecs_task_execution`, attached policies, `aws_iam_instance_profile.ecs_instance`, `aws_security_group.backend`, `aws_launch_template.ecs`, `aws_autoscaling_group.ecs`, `aws_ecs_cluster.this`, `aws_ecs_capacity_provider.this`, `aws_ecs_cluster_capacity_providers.this`, `aws_cloudwatch_log_group.backend`, `aws_ecs_task_definition.backend`, `aws_ecs_service.backend`, `data.aws_instances.backend`, `data.aws_ssm_parameter.ecs_ami`
 - **Replace:** `terraform_data.image_build` (because the repository_url it references changes)
 - **No-op:** VPC, subnets, IGW, NAT, route tables (just tag updates on subnets after dropping `kubernetes.io/*`)
@@ -1043,8 +1043,8 @@ cd infra/wiz && terraform plan -out=tfplan
 ```
 
 Expected:
-- `wiz-v2_generic_connector.aws_sorcery has moved to wiz-v2_generic_connector.aws_code_challenge`
-- In-place update on the connector's tags (Project changes from `sorcery-wiz-connector` to `code-challenge-wiz-connector`)
+- `wiz-v2_generic_connector.aws_code_challenge has moved to wiz-v2_generic_connector.aws_code_challenge`
+- In-place update on the connector's tags (Project changes from `code-challenge-wiz-connector` to `code-challenge-wiz-connector`)
 - 0 to destroy, 0 to create
 
 If anything is destroyed or created, stop and debug.
@@ -1106,24 +1106,24 @@ Expected:
 aws eks list-clusters --profile dev-product-cto-play --region us-east-1
 # Should be: { "clusters": [] }
 
-# No ELBs in this account/region with sorcery prefix or the old hash
+# No ELBs in this account/region with code-challenge prefix or the old hash
 aws elb describe-load-balancers --profile dev-product-cto-play --region us-east-1 --output table 2>&1 | head -5
-aws elbv2 describe-load-balancers --profile dev-product-cto-play --region us-east-1 --query 'LoadBalancers[?contains(LoadBalancerName, `sorcery`) || contains(LoadBalancerName, `a4df`)]' --output json
+aws elbv2 describe-load-balancers --profile dev-product-cto-play --region us-east-1 --query 'LoadBalancers[?contains(LoadBalancerName, `code-challenge`) || contains(LoadBalancerName, `a4df`)]' --output json
 # Both should be empty
 
 # One ECR repo, the new name
 aws ecr describe-repositories --profile dev-product-cto-play --region us-east-1 --query 'repositories[].[repositoryName]' --output text
-# Should include code-challenge-backend; should NOT include sorcery-solutions-backend
+# Should include code-challenge-backend; should NOT include code-challenge-backend
 
 # ECS cluster + service + running task
 aws ecs describe-services --cluster code-challenge --services backend --profile dev-product-cto-play --region us-east-1 --query 'services[0].{name:serviceName,desired:desiredCount,running:runningCount}' --output json
 # Should be: { "name": "backend", "desired": 1, "running": 1 }
 ```
 
-- [ ] **Step 4: Verify no `sorcery` strings remain in the repo**
+- [ ] **Step 4: Verify no `code-challenge` strings remain in the repo**
 
 ```bash
-grep -ril 'sorcery' . --exclude-dir=.git --exclude-dir=.terraform
+grep -ril 'code-challenge' . --exclude-dir=.git --exclude-dir=.terraform
 ```
 
 Expected: empty.
@@ -1171,7 +1171,7 @@ terraform init -upgrade
 terraform apply
 ```
 
-Note: images previously pushed to the old `sorcery-solutions-backend` ECR are NOT recoverable. The `image.tf` build will push a fresh image on apply.
+Note: images previously pushed to the old `code-challenge-backend` ECR are NOT recoverable. The `image.tf` build will push a fresh image on apply.
 
 ---
 
