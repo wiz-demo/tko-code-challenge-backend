@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "backend" {
-  name                 = "sorcery-solutions-backend"
+  name                 = "code-challenge-backend"
   image_tag_mutability = "MUTABLE"
   force_delete         = true
 
@@ -8,7 +8,7 @@ resource "aws_ecr_repository" "backend" {
   }
 
   tags = {
-    Name = "sorcery-solutions-backend"
+    Name = "code-challenge-backend"
   }
 }
 
