@@ -103,9 +103,10 @@ output "aws_connector_name" {
   value       = wiz-v2_generic_connector.aws_code_challenge.name
 }
 
-# Preserve state across the sorcery → code-challenge rename. Without this,
-# `terraform apply` would destroy and recreate the connector, losing scan
-# history and re-onboarding the AWS account in Wiz.
+# Preserve state across the resource address rename (old name retained in
+# the `from` below for state lookup only). Without this, `terraform apply`
+# would destroy and recreate the connector, losing scan history and
+# re-onboarding the AWS account in Wiz.
 moved {
   from = wiz-v2_generic_connector.aws_sorcery
   to   = wiz-v2_generic_connector.aws_code_challenge
