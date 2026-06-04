@@ -69,7 +69,7 @@ handlers without a per-request setup cost.
   |----|----------|-----------------------|-------|
   | 1  | alice    | alice@example.com     | user  |
   | 2  | bob      | bob@example.com       | user  |
-  | 3  | admin    | admin@sorcery.example | admin |
+  | 3  | admin    | admin@code-challenge.example | admin |
 
 - Export: `sqlite_db` (a `sqlite3.Connection`).
 

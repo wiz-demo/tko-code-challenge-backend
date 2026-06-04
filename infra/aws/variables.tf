@@ -23,19 +23,13 @@ variable "owner" {
 variable "project" {
   type        = string
   description = "Project tag for cost attribution."
-  default     = "sorcery-solutions-eks-demo"
+  default     = "code-challenge"
 }
 
-variable "cluster_name" {
+variable "ecs_cluster_name" {
   type        = string
-  description = "EKS cluster name."
-  default     = "sorcery-demo"
-}
-
-variable "kubernetes_version" {
-  type        = string
-  description = "EKS control-plane Kubernetes version."
-  default     = "1.32"
+  description = "ECS cluster name."
+  default     = "code-challenge"
 }
 
 variable "vpc_cidr" {

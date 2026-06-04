@@ -4,18 +4,18 @@ resource "aws_vpc" "this" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "${var.cluster_name}-vpc"
+    Name = "${var.ecs_cluster_name}-vpc"
   }
 }
 
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
   tags = {
-    Name = "${var.cluster_name}-igw"
+    Name = "${var.ecs_cluster_name}-igw"
   }
 }
 
-# Public subnets (one per AZ): for the public NLB
+# Public subnets (one per AZ): host the ECS EC2 instance (public IP on :8000)
 resource "aws_subnet" "public" {
   count = length(local.azs)
 
@@ -25,13 +25,11 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name                                        = "${var.cluster_name}-public-${local.azs[count.index]}"
-    "kubernetes.io/role/elb"                    = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    Name = "${var.ecs_cluster_name}-public-${local.azs[count.index]}"
   }
 }
 
-# Private subnets (one per AZ): for pods
+# Private subnets (one per AZ): reserved, no workloads run here today
 resource "aws_subnet" "private" {
   count = length(local.azs)
 
@@ -40,9 +38,7 @@ resource "aws_subnet" "private" {
   availability_zone = local.azs[count.index]
 
   tags = {
-    Name                                        = "${var.cluster_name}-private-${local.azs[count.index]}"
-    "kubernetes.io/role/internal-elb"           = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    Name = "${var.ecs_cluster_name}-private-${local.azs[count.index]}"
   }
 }
 
@@ -50,7 +46,7 @@ resource "aws_subnet" "private" {
 resource "aws_eip" "nat" {
   domain = "vpc"
   tags = {
-    Name = "${var.cluster_name}-nat"
+    Name = "${var.ecs_cluster_name}-nat"
   }
 }
 
@@ -59,7 +55,7 @@ resource "aws_nat_gateway" "this" {
   subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name = "${var.cluster_name}-nat"
+    Name = "${var.ecs_cluster_name}-nat"
   }
 
   depends_on = [aws_internet_gateway.this]
@@ -75,7 +71,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${var.cluster_name}-rt-public"
+    Name = "${var.ecs_cluster_name}-rt-public"
   }
 }
 
@@ -94,7 +90,7 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "${var.cluster_name}-rt-private"
+    Name = "${var.ecs_cluster_name}-rt-private"
   }
 }
 

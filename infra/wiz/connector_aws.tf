@@ -40,7 +40,7 @@ data "terraform_remote_state" "wiz_iam" {
   }
 }
 
-resource "wiz-v2_generic_connector" "aws_sorcery" {
+resource "wiz-v2_generic_connector" "aws_code_challenge" {
   name = var.connector_name
   type = "aws"
 
@@ -95,10 +95,10 @@ output "aws_role_arn" {
 
 output "aws_connector_id" {
   description = "Wiz connector ID (visible in the Wiz UI)."
-  value       = wiz-v2_generic_connector.aws_sorcery.id
+  value       = wiz-v2_generic_connector.aws_code_challenge.id
 }
 
 output "aws_connector_name" {
   description = "Wiz connector display name."
-  value       = wiz-v2_generic_connector.aws_sorcery.name
+  value       = wiz-v2_generic_connector.aws_code_challenge.name
 }

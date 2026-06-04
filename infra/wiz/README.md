@@ -70,5 +70,5 @@ triggers an `auth_params_hash__` inconsistency error.
 ## Things this won't do
 
 - Does NOT scan account `432513806796` (the `cto-experts` profile's account)
-- Does NOT modify the EKS deployment from `infra/aws/`
+- Does NOT modify the ECS-on-EC2 deployment from `infra/aws/`
 - Does NOT configure Bedrock, DocumentDB, or any other supporting service

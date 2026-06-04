@@ -4,7 +4,7 @@
 
 **Goal:** Deploy the FastAPI demo backend (with intentional CWE-78/89/502 vulnerabilities) to a fresh EKS Auto Mode cluster in AWS account `800618367342` (`cto-experts` SSO profile, `us-east-1`) via Terraform, exposed via a public NLB.
 
-**Architecture:** Single Terraform module at `infra/aws/` with local state. One VPC, one EKS Auto Mode cluster, one ECR repo, one `null_resource`-style image build (`terraform_data`), one helm_release of the existing `helm/sorcery-solutions-backend` chart. Public exposure via Service type=LoadBalancer (NLB). No HTTPS, no backing services for Mongo/Bedrock.
+**Architecture:** Single Terraform module at `infra/aws/` with local state. One VPC, one EKS Auto Mode cluster, one ECR repo, one `null_resource`-style image build (`terraform_data`), one helm_release of the existing `helm/code-challenge-backend` chart. Public exposure via Service type=LoadBalancer (NLB). No HTTPS, no backing services for Mongo/Bedrock.
 
 **Tech Stack:** Terraform `>= 1.6`, `hashicorp/aws ~> 5.70`, `hashicorp/helm ~> 2.15`, `hashicorp/kubernetes ~> 2.32`, `hashicorp/external ~> 2.3`, `hashicorp/null ~> 3.2`. Docker + buildx locally for image builds. AWS CLI v2 for SSO.
 
@@ -37,19 +37,19 @@ kubectl version --client
 The chart currently probes `/api/spells`, which doesn't exist (the app's endpoints are `/api/prompts`, `/api/users`, `/api/execute`, `/api/import_prompts`, `/api/chat`). A deployment as-is would crash-loop on readiness. Fix the chart defaults to probe `/openapi.json`, which FastAPI always serves with HTTP 200.
 
 **Files:**
-- Modify: `helm/sorcery-solutions-backend/values.yaml` (lines 79–86)
+- Modify: `helm/code-challenge-backend/values.yaml` (lines 79–86)
 
 - [ ] **Step 1: Confirm starting state**
 
 ```bash
-grep -n 'api/spells\|openapi' helm/sorcery-solutions-backend/values.yaml
+grep -n 'api/spells\|openapi' helm/code-challenge-backend/values.yaml
 ```
 
 Expected: two matches for `path: /api/spells` (lines 81 and 85). No matches for `openapi`.
 
 - [ ] **Step 2: Replace both probe paths**
 
-In `helm/sorcery-solutions-backend/values.yaml`, change both occurrences of:
+In `helm/code-challenge-backend/values.yaml`, change both occurrences of:
 
 ```yaml
     path: /api/spells
@@ -66,7 +66,7 @@ to:
 - [ ] **Step 3: Verify the change**
 
 ```bash
-grep -n 'api/spells\|openapi' helm/sorcery-solutions-backend/values.yaml
+grep -n 'api/spells\|openapi' helm/code-challenge-backend/values.yaml
 ```
 
 Expected: two matches for `path: /openapi.json` (lines 81 and 85). No matches for `api/spells`.
@@ -74,7 +74,7 @@ Expected: two matches for `path: /openapi.json` (lines 81 and 85). No matches fo
 - [ ] **Step 4: Commit**
 
 ```bash
-git add helm/sorcery-solutions-backend/values.yaml
+git add helm/code-challenge-backend/values.yaml
 git commit -m "fix(helm): probe /openapi.json instead of nonexistent /api/spells
 
 The /api/spells endpoint doesn't exist in the FastAPI app, so the
@@ -177,13 +177,13 @@ variable "owner" {
 variable "project" {
   type        = string
   description = "Project tag for cost attribution."
-  default     = "sorcery-solutions-eks-demo"
+  default     = "code-challenge"
 }
 
 variable "cluster_name" {
   type        = string
   description = "EKS cluster name."
-  default     = "sorcery-demo"
+  default     = "code-challenge"
 }
 
 variable "kubernetes_version" {
@@ -400,7 +400,7 @@ placement). Single NAT gateway in public AZ-a (cost-saving)."
 
 ```hcl
 resource "aws_ecr_repository" "backend" {
-  name                 = "sorcery-solutions-backend"
+  name                 = "code-challenge-backend"
   image_tag_mutability = "MUTABLE"
   force_delete         = true
 
@@ -409,7 +409,7 @@ resource "aws_ecr_repository" "backend" {
   }
 
   tags = {
-    Name = "sorcery-solutions-backend"
+    Name = "code-challenge-backend"
   }
 }
 
@@ -712,7 +712,7 @@ because ECR rejects OCI provenance attestations."
 
 ## Task 7: Helm release of the backend chart
 
-Configures the helm and kubernetes providers using `data.aws_eks_cluster_auth`, deploys the existing `helm/sorcery-solutions-backend` chart with overrides for image, service type, env vars, and resources. The probe paths come from the chart defaults (fixed in Task 1).
+Configures the helm and kubernetes providers using `data.aws_eks_cluster_auth`, deploys the existing `helm/code-challenge-backend` chart with overrides for image, service type, env vars, and resources. The probe paths come from the chart defaults (fixed in Task 1).
 
 **Files:**
 - Create: `infra/aws/k8s.tf`
@@ -739,8 +739,8 @@ provider "kubernetes" {
 }
 
 resource "helm_release" "backend" {
-  name      = "sorcery-solutions-backend"
-  chart     = "${path.module}/../../helm/sorcery-solutions-backend"
+  name      = "code-challenge-backend"
+  chart     = "${path.module}/../../helm/code-challenge-backend"
   namespace = "default"
 
   values = [
@@ -756,7 +756,7 @@ resource "helm_release" "backend" {
       }
       env = {
         MONGO_URI = "mongodb://placeholder:27017"
-        MONGO_DB  = "sorcery_demo"
+        MONGO_DB  = "code_challenge_demo"
       }
       resources = {
         requests = {
@@ -802,7 +802,7 @@ Expected: `Success! The configuration is valid.`
 
 ```bash
 git add infra/aws/k8s.tf
-git commit -m "feat(infra): helm_release of sorcery-solutions-backend chart
+git commit -m "feat(infra): helm_release of code-challenge-backend chart
 
 Helm and kubernetes providers wired to the EKS cluster via
 data.aws_eks_cluster_auth token. Chart values override image
@@ -1004,13 +1004,13 @@ echo "NLB is responding."
 
 ```bash
 eval "$(terraform output -raw kubeconfig_command)"
-kubectl get pods -n default -l app.kubernetes.io/name=sorcery-solutions-backend
+kubectl get pods -n default -l app.kubernetes.io/name=code-challenge-backend
 ```
 
 Expected: one pod in `Running` state with `READY 1/1`.
 
 ```bash
-kubectl get svc sorcery-solutions-backend -n default -o wide
+kubectl get svc code-challenge-backend -n default -o wide
 ```
 
 Expected: `TYPE` is `LoadBalancer`, `EXTERNAL-IP` is the NLB hostname.
@@ -1026,7 +1026,7 @@ Expected output (interleaved):
 ```
 [{"id":1,"username":"alice","email":"alice@example.com","role":"user"}]
 
-[{"id":1,"username":"alice","email":"alice@example.com","role":"user"},{"id":2,"username":"bob","email":"bob@example.com","role":"user"},{"id":3,"username":"admin","email":"admin@sorcery.example","role":"admin"}]
+[{"id":1,"username":"alice","email":"alice@example.com","role":"user"},{"id":2,"username":"bob","email":"bob@example.com","role":"user"},{"id":3,"username":"admin","email":"admin@code-challenge.example","role":"admin"}]
 ```
 
 The first line is the benign lookup. The second line is the SQL-injection payload returning all three rows — confirming CWE-89 is live and exploitable on the public internet.
@@ -1049,4 +1049,4 @@ Report back with:
 - [ ] `curl http://<nlb-hostname>/api/users?username=alice` returns alice's row.
 - [ ] `curl --get 'http://<nlb-hostname>/api/users' --data-urlencode "username=' OR '1'='1"` returns all three rows.
 - [ ] `kubectl get pods` shows backend pod Running.
-- [ ] No changes outside `infra/aws/` and `helm/sorcery-solutions-backend/values.yaml` (and the plan/spec docs already committed).
+- [ ] No changes outside `infra/aws/` and `helm/code-challenge-backend/values.yaml` (and the plan/spec docs already committed).
