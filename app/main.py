@@ -1,6 +1,6 @@
 import subprocess
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import sqlite_db
@@ -22,9 +22,9 @@ async def root():
 
 
 @app.get("/api/users")
-async def get_users(username: str | None = None):
-    # Vulnerable to SQL injection (CWE-89) — intentional for demo
-    query = f"SELECT id, username, email, role FROM users WHERE username = '{username}'"
+async def get_users(request: Request):
+    username = request.query_params.get('username')
+    query = "SELECT id, username, email, role FROM users WHERE username = '"+username+"'"
     rows = sqlite_db.execute(query).fetchall()
     return [
         {"id": r[0], "username": r[1], "email": r[2], "role": r[3]}
