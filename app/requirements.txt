@@ -3,6 +3,6 @@ uvicorn[standard]~=0.34
 pydantic~=2.11
 python-dotenv~=1.1
 motor~=3.7
-piccolo==1.1.0
-PyYAML==5.3
+piccolo==1.1.1
+PyYAML==5.4
 boto3~=1.35
